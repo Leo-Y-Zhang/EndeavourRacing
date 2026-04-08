@@ -1,4 +1,2 @@
 @echo off
-title Endeavour Precision Lap
-echo Opening Endeavour Precision Lap...
-start "" "%~dp0index.html"
+start "" "C:\Users\user\Claude Code Projects\EndeavourPrecisionLap\index.html"
