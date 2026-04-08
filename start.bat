@@ -1,4 +1,2 @@
 @echo off
-title Endeavour Racing Website
-echo Opening Endeavour Racing Website...
-start "" "%~dp0Website.html"
+start "" "C:\Users\user\Claude Code Projects\EndeavourRacingWebsite\Website.html"
