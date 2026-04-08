@@ -714,6 +714,25 @@ body::before {
 .lb-pts { font-family: 'Bebas Neue', sans-serif; font-size: clamp(.95rem,2.3vw,1.35rem); color: var(--brand); letter-spacing: 2px; flex-shrink: 0; }
 .lb-empty { font-family: 'Space Mono', monospace; font-size: .58rem; color: var(--muted); text-align: center; padding: 60px 0; letter-spacing: 4px; }
 
+/* ════ SESSION LAP TABLE ════ */
+.session-tbl-wrap { flex-shrink: 0; margin-top: 6px; }
+.session-tbl-hdr { font-family: 'Space Mono', monospace; font-size: clamp(.44rem,.7vw,.55rem); letter-spacing: 3px; color: var(--muted); text-transform: uppercase; text-align: center; margin-bottom: 6px; }
+.session-tbl { width: 100%; border-collapse: collapse; }
+.session-tbl th { font-family: 'Space Mono', monospace; font-size: clamp(.42rem,.65vw,.5rem); letter-spacing: 2px; color: var(--muted); text-transform: uppercase; padding: 4px 8px; border-bottom: 1px solid var(--border); text-align: center; }
+.session-tbl td { font-family: 'Space Mono', monospace; font-size: clamp(.5rem,.8vw,.6rem); padding: 5px 8px; text-align: center; border-bottom: 1px solid rgba(15,42,28,.6); color: var(--white); }
+.session-tbl tr:last-child td { border-bottom: none; }
+.session-tbl tr:hover td { background: rgba(0,232,150,.04); }
+.session-tbl td.sess-pos { color: var(--muted); }
+.session-tbl td.sess-ini { font-family: 'Bebas Neue', sans-serif; font-size: clamp(.65rem,1.2vw,.9rem); letter-spacing: 2px; color: var(--white); }
+.session-tbl td.sess-track { color: var(--muted); font-size: clamp(.4rem,.62vw,.48rem); }
+.session-tbl td.sess-actual { color: var(--bright); }
+.session-tbl td.sess-delta-good { color: var(--bright); }
+.session-tbl td.sess-delta-ok { color: var(--amber); }
+.session-tbl td.sess-delta-bad { color: #ff6b6b; }
+.session-tbl td.sess-pts { color: var(--brand); font-family: 'Bebas Neue', sans-serif; font-size: clamp(.6rem,1.1vw,.82rem); letter-spacing: 1px; }
+.sess-new { animation: sess-flash .8s ease; }
+@keyframes sess-flash { 0%,100%{background:transparent} 40%{background:rgba(0,232,150,.12)} }
+
 /* ── HIDE NUMBER INPUT SPINNERS ── */
 input[type=number]::-webkit-outer-spin-button,
 input[type=number]::-webkit-inner-spin-button {
@@ -992,7 +1011,7 @@ input[type=number] { -moz-appearance: textfield; }
     <div class="breakdown" id="rBreak">—</div>
   </div>
   <div class="row-c" style="padding-bottom:4px;">
-    <button class="btn" onclick="go('leaderboard');renderLB()">LEADERBOARD</button>
+    <button class="btn" onclick="go('leaderboard');renderLB();renderSessionTable()">LEADERBOARD</button>
     <button class="btn btn-go" onclick="playAgain()">PLAY AGAIN</button>
   </div>
 </div>
@@ -1012,6 +1031,13 @@ input[type=number] { -moz-appearance: textfield; }
   </div>
   <div style="display:flex;gap:10px;justify-content:center;flex-shrink:0;flex-wrap:wrap;margin-bottom:8px;" id="lbStats"></div>
   <div class="lb-list" id="lbList"></div>
+  <div class="session-tbl-wrap" id="sessionWrap" style="display:none;">
+    <div class="session-tbl-hdr">SESSION LAP HISTORY</div>
+    <table class="session-tbl">
+      <thead><tr><th>#</th><th>Driver</th><th>Track</th><th>Actual</th><th>Predicted</th><th>Delta</th><th>Score</th></tr></thead>
+      <tbody id="sessionTbody"></tbody>
+    </table>
+  </div>
   <div class="row-c" style="gap:10px;flex-wrap:wrap;flex-shrink:0;padding-top:10px;">
     <button class="btn" onclick="nextPlayer()">NEXT PLAYER</button>
     <button class="btn btn-amber" onclick="clearBoard()">CLEAR BOARD</button>
@@ -1532,6 +1558,7 @@ function computeResult() {
   const scoreComment = grade.comment || '';
 
   saveScore(S.initials, S.team?.id||'rb', grade.pts, diff, S.track.name, S.weather.label);
+  saveSessionRun(S.initials, lap, S.guess, diff, S.track.name, grade.pts);
 
   // Render
   document.getElementById('rMedal').textContent = grade.medal;
@@ -1569,6 +1596,7 @@ function computeResult() {
    LEADERBOARD
 ════════════════════════════════ */
 const LB = 'endeavour_lb_v4';
+const SESSION_RUNS = [];
 function saveScore(ini,tid,pts,diff,track,weather){
   try {
     let b = JSON.parse(localStorage.getItem(LB)||'[]');
@@ -1576,6 +1604,32 @@ function saveScore(ini,tid,pts,diff,track,weather){
     b.sort((a,b)=>b.pts-a.pts||a.diff-b.diff);
     localStorage.setItem(LB,JSON.stringify(b.slice(0,10)));
   } catch(e){}
+}
+function saveSessionRun(ini,actual,predicted,diff,track,pts){
+  SESSION_RUNS.push({ini,actual:parseFloat(actual.toFixed(3)),predicted:parseFloat(predicted.toFixed(3)),diff:parseFloat(diff.toFixed(3)),track,pts});
+}
+function makeTd(cls,text){var td=document.createElement('td');if(cls)td.className=cls;td.textContent=text;return td;}
+function renderSessionTable(){
+  var tbody=document.getElementById('sessionTbody');
+  var wrap=document.getElementById('sessionWrap');
+  if(!tbody||!wrap)return;
+  if(!SESSION_RUNS.length){wrap.style.display='none';return;}
+  wrap.style.display='block';
+  while(tbody.firstChild)tbody.removeChild(tbody.firstChild);
+  SESSION_RUNS.slice().reverse().forEach(function(r,i){
+    var tr=document.createElement('tr');
+    if(i===0)tr.className='sess-new';
+    var deltaClass=r.diff<0.3?'sess-delta-good':r.diff<0.8?'sess-delta-ok':'sess-delta-bad';
+    var sign=r.predicted>r.actual?'+':'-';
+    tr.appendChild(makeTd('sess-pos',String(SESSION_RUNS.length-i)));
+    tr.appendChild(makeTd('sess-ini',r.ini));
+    tr.appendChild(makeTd('sess-track',r.track));
+    tr.appendChild(makeTd('sess-actual',r.actual.toFixed(3)+'s'));
+    tr.appendChild(makeTd('',r.predicted.toFixed(3)+'s'));
+    tr.appendChild(makeTd(deltaClass,sign+r.diff.toFixed(3)+'s'));
+    tr.appendChild(makeTd('sess-pts',String(r.pts)));
+    tbody.appendChild(tr);
+  });
 }
 function renderLB(){
   let b=[]; try{b=JSON.parse(localStorage.getItem(LB)||'[]');}catch(e){}
