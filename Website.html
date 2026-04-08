@@ -448,6 +448,7 @@
   <a href="#story" class="mob-link">Story</a>
   <a href="#team" class="mob-link">Team</a>
   <a href="#sponsors" class="mob-link">Sponsors</a>
+  <a href="#contact" class="mob-link">Contact</a>
 
 </div>
 
@@ -468,6 +469,7 @@
     <a href="#story" data-section="story">Story</a>
     <a href="#team" data-section="team">Team</a>
     <a href="#sponsors" data-section="sponsors">Sponsors</a>
+    <a href="#contact" data-section="contact">Contact</a>
 
   </div>
   <div class="nav-right">
@@ -1123,6 +1125,62 @@
   </div>
 </section>
 
+<!-- CONTACT -->
+<section id="contact">
+  <div class="container">
+    <div class="cta-block fade-up">
+      <div class="cta-left">
+        <p class="section-eyebrow">Get in Touch</p>
+        <h2>Work With <span class="accent">Endeavour</span></h2>
+        <p>Whether you're a potential sponsor, media representative, or just want to follow our journey — we'd love to hear from you.</p>
+        <div class="contact-links">
+          <a href="mailto:endeavourracing@gmail.com" class="contact-link">
+            <div class="cl-icon">✉</div>
+            endeavourracing@gmail.com
+          </a>
+          <a href="https://maps.google.com/?q=Harrow+School,+London" target="_blank" rel="noopener noreferrer" class="contact-link">
+            <div class="cl-icon">📍</div>
+            Harrow School, London
+          </a>
+        </div>
+        <div class="social-links">
+          <a href="https://www.instagram.com/endeavour_racing/" target="_blank" rel="noopener noreferrer" class="social-link">
+            <span>◉</span> Instagram
+          </a>
+        </div>
+      </div>
+      <div class="cta-right">
+        <h3>Send a Message</h3>
+        <p>Fill in your details and we'll get back to you as soon as possible.</p>
+        <form class="contact-form" id="contactForm" novalidate>
+          <div class="form-field">
+            <label for="cf-name">Your Name</label>
+            <input type="text" id="cf-name" name="name" placeholder="Full name" required autocomplete="name">
+          </div>
+          <div class="form-field">
+            <label for="cf-email">Email Address</label>
+            <input type="email" id="cf-email" name="email" placeholder="your@email.com" required autocomplete="email">
+          </div>
+          <div class="form-field">
+            <label for="cf-subject">Subject</label>
+            <input type="text" id="cf-subject" name="subject" placeholder="How can we help?" required>
+          </div>
+          <div class="form-field">
+            <label for="cf-message">Message</label>
+            <textarea id="cf-message" name="message" placeholder="Tell us more..." required></textarea>
+          </div>
+          <button type="submit" class="form-submit" id="cf-submit">Send Message</button>
+        </form>
+        <div class="form-success" id="cf-success">
+          <div class="success-icon">✓</div>
+          <h4>Message Sent!</h4>
+          <p>Thanks for reaching out. We'll be in touch soon.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- FOOTER -->
 <footer>
   <div class="footer-top">
@@ -1183,6 +1241,41 @@
     a.addEventListener('click', closeMobileMenu);
   });
 
+  /* CONTACT FORM */
+  var contactForm = $('contactForm');
+  if (contactForm) {
+    contactForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      var valid = true;
+      var fields = [
+        { id: 'cf-name',    validate: function(v) { return v.trim().length >= 2; } },
+        { id: 'cf-email',   validate: function(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()); } },
+        { id: 'cf-subject', validate: function(v) { return v.trim().length >= 2; } },
+        { id: 'cf-message', validate: function(v) { return v.trim().length >= 10; } }
+      ];
+      fields.forEach(function(f) {
+        var el = $(f.id);
+        if (!el) return;
+        var ok = f.validate(el.value);
+        el.classList.toggle('error', !ok);
+        if (!ok) valid = false;
+      });
+      if (!valid) return;
+      var btn = $('cf-submit');
+      if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+      /* Simulate send — replace with real endpoint or Formspree action as needed */
+      setTimeout(function() {
+        contactForm.style.display = 'none';
+        var successEl = $('cf-success');
+        if (successEl) successEl.style.display = 'block';
+      }, 800);
+    });
+    /* Clear error state on input */
+    contactForm.querySelectorAll('input, textarea').forEach(function(el) {
+      el.addEventListener('input', function() { this.classList.remove('error'); });
+    });
+  }
+
   /* SMOOTH SCROLL — deferred so mobile-menu close settles first */
   document.querySelectorAll('a[href^="#"]').forEach(function(link) {
     link.addEventListener('click', function(e) {
@@ -1202,7 +1295,7 @@
   });
 
   /* NAV SHRINK + ACTIVE + BACK-TO-TOP */
-  var sectionIds = ['about', 'achievements', 'story', 'team', 'sponsors'];
+  var sectionIds = ['about', 'achievements', 'story', 'team', 'sponsors', 'contact'];
   function onScroll() {
     if (nav)     nav.classList.toggle('scrolled', window.scrollY > 60);
     if (backTop) backTop.classList.toggle('visible', window.scrollY > 400);
