@@ -62,7 +62,7 @@
   .editable:empty:before{content:attr(data-placeholder);opacity:.35;pointer-events:none}
 
   /* ── KPI CARDS ── */
-  .kpi-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px}
+  .kpi-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:20px}
   .kpi{background:var(--bg3);border:1px solid var(--b2);border-radius:12px;padding:20px;position:relative;overflow:hidden}
   .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--teal)}
   .kpi.warn::before{background:var(--yellow)}
@@ -78,6 +78,9 @@
   .kpi-sub{font-size:10.5px;color:var(--grey2);margin-top:6px}
   .kpi-trend{font-size:10.5px;margin-top:4px}
   .up{color:var(--green)}.down{color:var(--red)}
+  .kpi.countdown::before{background:linear-gradient(90deg,var(--teal2),var(--teal))}
+  .kpi.countdown .kpi-val{color:var(--teal)}
+  .countdown-sub{font-size:9px;color:var(--grey2);margin-top:2px;font-family:var(--mono)}
 
   /* ── OVERVIEW GRID ── */
   .ov-grid{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:16px}
@@ -293,6 +296,12 @@
       <div class="kpi-label editable" contenteditable="false">Risks Logged</div>
       <div class="kpi-sub editable" contenteditable="false">4 open · 5 controlled</div>
       <div class="kpi-trend down editable" contenteditable="false">⚠ R-03, R-04 escalate</div>
+    </div>
+    <div class="kpi countdown">
+      <div class="kpi-val" id="countdown-days">—</div>
+      <div class="kpi-label">Days to Nationals</div>
+      <div class="kpi-sub">Greenpower Nationals 2026</div>
+      <div class="countdown-sub" id="countdown-detail">Calculating…</div>
     </div>
   </div>
 
@@ -672,8 +681,27 @@
 </div>
 
 <script>
-  // ── CLOCK ──
-  function tick(){const n=new Date();document.getElementById('clock').textContent=n.toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}
+  // ── CLOCK + COUNTDOWN ──
+  var NATIONALS = new Date('2026-10-17T09:00:00');
+  function tick(){
+    var n=new Date();
+    document.getElementById('clock').textContent=n.toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+    var diff=NATIONALS-n;
+    var dEl=document.getElementById('countdown-days');
+    var sEl=document.getElementById('countdown-detail');
+    if(dEl){
+      if(diff>0){
+        var days=Math.floor(diff/86400000);
+        var hrs=Math.floor((diff%86400000)/3600000);
+        var mins=Math.floor((diff%3600000)/60000);
+        dEl.textContent=days;
+        if(sEl)sEl.textContent=hrs+'h '+mins+'m remaining today';
+      }else{
+        dEl.textContent='0';
+        if(sEl)sEl.textContent='Race day!';
+      }
+    }
+  }
   tick();setInterval(tick,30000);
 
   // ── PANELS ──
