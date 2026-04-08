@@ -1,4 +1,2 @@
 @echo off
-title Endeavour Mission Control
-echo Opening Endeavour Mission Control...
-start "" "%~dp0index.html"
+start "" "C:\Users\user\Claude Code Projects\EndeavourMissionControl\index.html"
