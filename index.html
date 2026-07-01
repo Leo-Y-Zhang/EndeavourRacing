@@ -693,7 +693,6 @@
     editMode=!editMode;
     document.body.classList.toggle('edit-mode',editMode);
     const t=document.getElementById('editToggle');
-    t.textContent=editMode?'💾 Save Changes':'✏️ Edit Mode';
     t.classList.toggle('active',editMode);
     document.querySelectorAll('.editable').forEach(el=>{
       el.contentEditable=editMode?'true':'false';
@@ -701,6 +700,13 @@
     document.getElementById('addTaskBtn').style.display=editMode?'block':'none';
     document.getElementById('addRiskBtn').style.display=editMode?'block':'none';
     document.getElementById('addLogBtn').style.display=editMode?'block':'none';
+    if(editMode){
+      t.textContent='💾 Save Changes';
+    }else{
+      saveState();
+      t.textContent='✓ Saved';
+      setTimeout(function(){if(!editMode)t.textContent='✏️ Edit Mode';},1400);
+    }
   }
 
   // ── TASK MODAL ──
@@ -719,7 +725,7 @@
     const pri=document.getElementById('tPri').value;
     const card=document.createElement('div');
     card.className='task-card';
-    card.onclick=()=>editTask(card);
+    card.setAttribute('onclick','editTask(this)');
     card.innerHTML=`<div class="task-title editable" contenteditable="true">${title}</div>
       <div class="task-meta"><span class="t-tag ${cat}">${catNames[cat]}</span>
       <span class="t-owner editable" contenteditable="true">${owner}</span>
@@ -787,9 +793,37 @@
     entry.querySelector('.log-text').focus();
   }
 
+  // ── PERSISTENCE (localStorage) ──
+  // "Save Changes" writes the editable/added content to localStorage so it
+  // survives a refresh. The committed HTML stays the source of truth: a fresh
+  // browser with no saved state shows the original dashboard, and any storage
+  // or parse error falls back to that default — never a blank or broken view.
+  const EMC_KEY='emc-dashboard-v1';
+  const EMC_PANELS=['panel-overview','panel-tasks','panel-risks','panel-budget','panel-schedule','panel-kpis'];
+  function saveState(){
+    try{
+      const data={};
+      EMC_PANELS.forEach(function(id){var el=document.getElementById(id);if(el)data[id]=el.innerHTML;});
+      localStorage.setItem(EMC_KEY,JSON.stringify({v:1,panels:data}));
+    }catch(e){/* storage unavailable/full: keep in-memory edits, no persistence */}
+  }
+  function restoreState(){
+    try{
+      var raw=localStorage.getItem(EMC_KEY);
+      if(!raw)return;
+      var saved=JSON.parse(raw);
+      if(!saved||saved.v!==1||!saved.panels)return;
+      EMC_PANELS.forEach(function(id){
+        var el=document.getElementById(id);
+        if(el&&typeof saved.panels[id]==='string')el.innerHTML=saved.panels[id];
+      });
+    }catch(e){try{localStorage.removeItem(EMC_KEY);}catch(_){}}
+  }
+
   // ── INIT ──
-  // Derive task-column counts from the actually-rendered cards on load
-  // so column headers stay correct instead of showing a stale hardcoded value.
+  // Restore any saved edits (falls back to committed defaults), then derive
+  // task-column counts from the actually-rendered cards so headers stay correct.
+  restoreState();
   updateCounts();
 </script>
 </body>
