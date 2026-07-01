@@ -1287,7 +1287,7 @@ function onInit() {
   el.style.color = v.length >= 1 ? 'var(--bright)' : 'var(--brand)';
 }
 function confirmDriver() {
-  const v = document.getElementById('initInput').value.trim().toUpperCase();
+  const v = document.getElementById('initInput').value.trim().toUpperCase().replace(/[^A-Z]/g,'');
   if (v.length < 1) { shake('initInput'); beep(180,.25,.2,'sawtooth'); return; }
   S.initials = v;
   buildScenario();
