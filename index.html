@@ -811,6 +811,11 @@
     log.insertBefore(entry,log.firstChild);
     entry.querySelector('.log-text').focus();
   }
+
+  // ── INIT ──
+  // Derive task-column counts from the actually-rendered cards on load
+  // so column headers stay correct instead of showing a stale hardcoded value.
+  updateCounts();
 </script>
 </body>
 </html>
