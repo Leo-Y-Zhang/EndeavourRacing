@@ -1,2 +1,2 @@
 @echo off
-start "" "C:\Users\user\Claude Code Projects\EndeavourRacingWebsite\Website.html"
+start "" "%~dp0Website.html"

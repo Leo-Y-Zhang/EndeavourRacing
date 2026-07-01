@@ -33,11 +33,11 @@ Or double-click `Website.html` in your file explorer.
 - **Story** — the reasoning behind the Endeavour name
 - **Team** — individual profiles for each of the six members
 - **Sponsors** — partner logos and a sponsorship enquiry form
-- **Contact** — email form powered by EmailJS
+- **Contact** — front-end contact form (demo) plus a direct mailto link
 
 ## Tech
 
-Single-file HTML/CSS/JavaScript — no frameworks, no build tools, no dependencies. Fonts loaded from Google Fonts. Contact form uses [EmailJS](https://www.emailjs.com/) for serverless email delivery.
+Single-file HTML/CSS/JavaScript — no frameworks, no build tools, no dependencies. Fonts loaded from Google Fonts. The contact form is a front-end demo and does not send messages on its own; the working contact route is the direct mailto link (endeavourracing@gmail.com). Wiring a live email endpoint would require the team's own email-service account and keys.
 
 ## Project context
 
