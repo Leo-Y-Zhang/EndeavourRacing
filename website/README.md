@@ -18,12 +18,12 @@ No build step needed — the entire site is a single self-contained HTML file.
 
 ```bash
 # Just open it in any browser
-open Website.html        # macOS
-start Website.html       # Windows
-xdg-open Website.html   # Linux
+open index.html        # macOS
+start index.html       # Windows
+xdg-open index.html   # Linux
 ```
 
-Or double-click `Website.html` in your file explorer.
+Or double-click `index.html` in your file explorer.
 
 ## What the site includes
 

@@ -6,7 +6,7 @@ Lap timing and driver performance prediction app for Endeavour Racing. Configure
 
 - **Setup Configuration** — Choose tyre compound, fuel level, ERS mode, and DRS
 - **Lap Time Prediction** — Real-time lap time estimate based on setup parameters
-- **Driver Performance** — Sector breakdowns and performance visualisation
+- **Driver Performance** — Predicted lap time visualisation with track-condition and sector-risk callouts
 - **Animated UI** — Rain particle effects, scanline overlay, F1-style dark theme
 
 ## Running

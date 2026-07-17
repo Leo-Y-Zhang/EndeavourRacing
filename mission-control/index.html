@@ -710,6 +710,11 @@
   }
 
   // ── TASK MODAL ──
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g,function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
   let targetCol='open';
   function openTaskModal(){document.getElementById('taskModal').classList.add('open')}
   function addTask(col){targetCol=col;openTaskModal()}
@@ -726,10 +731,10 @@
     const card=document.createElement('div');
     card.className='task-card';
     card.setAttribute('onclick','editTask(this)');
-    card.innerHTML=`<div class="task-title editable" contenteditable="true">${title}</div>
+    card.innerHTML=`<div class="task-title editable" contenteditable="true">${escapeHtml(title)}</div>
       <div class="task-meta"><span class="t-tag ${cat}">${catNames[cat]}</span>
-      <span class="t-owner editable" contenteditable="true">${owner}</span>
-      ${date?`<span class="t-date editable" contenteditable="true">${date}</span>`:''}
+      <span class="t-owner editable" contenteditable="true">${escapeHtml(owner)}</span>
+      ${date?`<span class="t-date editable" contenteditable="true">${escapeHtml(date)}</span>`:''}
       <div class="t-pri ${pri}"></div></div>`;
     const colEl=document.getElementById('col-'+col);
     const addBtn=colEl.querySelector('.add-task');
@@ -769,13 +774,13 @@
     const priLabel=level>=3.1?'ESCALATE':level>=1.3?'MITIGATE':'MONITOR';
     const statusLabel={'sc':'Controlled','sm':'Monitored','so':'Open'}[status];
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td style="font-family:var(--mono);color:var(--teal);font-size:12px" class="editable" contenteditable="true">${id}</td>
-      <td class="editable" contenteditable="true" style="font-weight:500">${desc}</td>
+    tr.innerHTML=`<td style="font-family:var(--mono);color:var(--teal);font-size:12px" class="editable" contenteditable="true">${escapeHtml(id)}</td>
+      <td class="editable" contenteditable="true" style="font-weight:500">${escapeHtml(desc)}</td>
       <td><span class="rpill ${pillClass}">${pillLabel}</span></td>
       <td style="color:${priColor};font-size:12px;font-weight:700">${priLabel}</td>
-      <td class="desc editable" contenteditable="true">${trigger}</td>
-      <td class="desc editable" contenteditable="true">${control}</td>
-      <td class="owner editable" contenteditable="true">${owner}</td>
+      <td class="desc editable" contenteditable="true">${escapeHtml(trigger)}</td>
+      <td class="desc editable" contenteditable="true">${escapeHtml(control)}</td>
+      <td class="owner editable" contenteditable="true">${escapeHtml(owner)}</td>
       <td><span class="spill s${status.charAt(1)}">${statusLabel}</span></td>`;
     document.getElementById('riskTable').appendChild(tr);
     closeModal('riskModal');
