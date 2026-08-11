@@ -37,7 +37,7 @@ Or double-click `index.html` in your file explorer.
 
 ## Tech
 
-Single-file HTML/CSS/JavaScript — no frameworks, no build tools, no dependencies. Fonts loaded from Google Fonts. The contact form is a front-end demo and does not send messages on its own; the working contact route is the team Instagram account linked in the footer. Wiring a live email endpoint would require the team's own email-service account and keys.
+Single-file HTML/CSS/JavaScript — no frameworks, no build tools, no dependencies. Fonts loaded from Google Fonts. The contact form is a front-end demo and does not send messages on its own; the working contact route is the direct mailto link (endeavourracing@gmail.com). Wiring a live email endpoint would require the team's own email-service account and keys.
 
 ## Project context
 
