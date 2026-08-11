@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Mission Control dashboard for Endeavour Racing — project management, task board, risk register, budget, and KPI tracking.">
+<title>Mission Control — Endeavour Racing</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#060a12;--bg2:#0a1018;--bg3:#0f1620;--bg4:#131e2a;
+    --teal:#2ecb8a;--teal2:#1a9b66;--teal3:#0d6644;
+    --dim:rgba(46,203,138,0.1);--glow:rgba(46,203,138,0.22);
+    --border:rgba(46,203,138,0.2);--b2:rgba(255,255,255,0.06);
+    --white:#edf2ff;--grey:#8a93a8;--grey2:#3a4255;
+    --red:#e74c3c;--yellow:#f39c12;--green:#27ae60;--blue:#3498db;
+    --mono:'JetBrains Mono',monospace;
+    --edit-bg:rgba(46,203,138,0.06);
+    --edit-border:rgba(46,203,138,0.25);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--white);min-height:100vh;overflow-x:hidden}
+
+  /* ── NOISE ── */
+  body::before{content:'';position:fixed;inset:0;background:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.018'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
+
+  /* ── TOP BAR ── */
+  .topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:58px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:16px}
+  .logo{display:flex;align-items:center;gap:10px;font-family:'Syne',sans-serif;font-weight:800;font-size:15px;letter-spacing:.1em;color:var(--white);text-transform:uppercase;flex-shrink:0}
+  .logo svg{width:28px;height:28px}
+  .divider{width:1px;height:28px;background:var(--b2);flex-shrink:0}
+  .mc-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--teal);letter-spacing:.12em;text-transform:uppercase}
+  .spacer{flex:1}
+  .live-badge{display:flex;align-items:center;gap:7px;background:rgba(39,174,96,0.15);border:1px solid rgba(39,174,96,0.3);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700;color:#27ae60}
+  .live-dot{width:7px;height:7px;border-radius:50%;background:#27ae60;animation:pulse 1.4s infinite}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+  .edit-toggle{display:flex;align-items:center;gap:8px;background:rgba(46,203,138,0.1);border:1px solid var(--border);border-radius:8px;padding:6px 14px;cursor:pointer;font-size:12px;font-weight:600;color:var(--teal);transition:all .2s}
+  .edit-toggle:hover{background:rgba(46,203,138,0.2)}
+  .edit-toggle.active{background:rgba(46,203,138,0.25);border-color:var(--teal)}
+  .clock{font-family:var(--mono);font-size:12px;color:var(--grey)}
+
+  /* tab nav */
+  .tabs{display:flex;gap:4px}
+  .tab{padding:7px 16px;border-radius:7px;border:1px solid transparent;background:none;color:var(--grey);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .18s;white-space:nowrap}
+  .tab.active{background:var(--dim);border-color:var(--border);color:var(--teal);font-weight:600}
+  .tab:hover:not(.active){color:var(--white)}
+
+  /* ── MAIN ── */
+  .main{margin-top:58px;padding:20px;min-height:calc(100vh - 58px);position:relative;z-index:1}
+  .panel{display:none}
+  .panel.active{display:block}
+
+  /* ── CARD ── */
+  .card{background:var(--bg3);border:1px solid var(--b2);border-radius:12px;padding:20px}
+  .card.hl{border-color:var(--border)}
+  .card-title{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--teal);margin-bottom:16px}
+
+  /* ── EDITABLE FIELDS ── */
+  .editable{outline:none;transition:background .15s,border-color .15s;border-radius:4px;padding:2px 4px;border:1px solid transparent}
+  body.edit-mode .editable{background:var(--edit-bg);border-color:var(--edit-border);cursor:text}
+  body.edit-mode .editable:focus{background:rgba(46,203,138,0.12);border-color:var(--teal);box-shadow:0 0 0 2px rgba(46,203,138,0.15)}
+  .editable:empty:before{content:attr(data-placeholder);opacity:.35;pointer-events:none}
+
+  /* ── KPI CARDS ── */
+  .kpi-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px}
+  .kpi{background:var(--bg3);border:1px solid var(--b2);border-radius:12px;padding:20px;position:relative;overflow:hidden}
+  .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--teal)}
+  .kpi.warn::before{background:var(--yellow)}
+  .kpi.alert::before{background:var(--red)}
+  .kpi.ok::before{background:var(--green)}
+  .kpi.blue::before{background:var(--blue)}
+  .kpi-val{font-family:'Syne',sans-serif;font-size:clamp(28px,2.8vw,40px);font-weight:800;color:var(--teal);line-height:1}
+  .kpi.warn .kpi-val{color:var(--yellow)}
+  .kpi.alert .kpi-val{color:var(--red)}
+  .kpi.ok .kpi-val{color:var(--green)}
+  .kpi.blue .kpi-val{color:var(--blue)}
+  .kpi-label{font-size:11px;color:var(--grey);text-transform:uppercase;letter-spacing:.08em;margin-top:5px}
+  .kpi-sub{font-size:10.5px;color:var(--grey2);margin-top:6px}
+  .kpi-trend{font-size:10.5px;margin-top:4px}
+  .up{color:var(--green)}.down{color:var(--red)}
+
+  /* ── OVERVIEW GRID ── */
+  .ov-grid{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:16px}
+
+  /* progress row */
+  .prog-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+  .prog-label{font-size:13px;color:var(--white);width:170px;flex-shrink:0}
+  .prog-track{flex:1;height:10px;background:rgba(255,255,255,0.06);border-radius:5px;overflow:hidden}
+  .prog-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--teal2),var(--teal));transition:width .3s}
+  .prog-fill.warn{background:linear-gradient(90deg,#c08010,var(--yellow))}
+  .prog-fill.full{background:linear-gradient(90deg,var(--teal2),var(--teal))}
+  .prog-val{font-family:var(--mono);font-size:11px;color:var(--teal);width:70px;text-align:right;flex-shrink:0}
+
+  /* activity log */
+  .log-entry{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+  .log-entry:last-child{border-bottom:none}
+  .log-date{font-family:var(--mono);font-size:10px;color:var(--grey2);width:58px;flex-shrink:0;margin-top:1px}
+  .log-text{font-size:12.5px;color:var(--white)}
+
+  /* workload */
+  .wl-row{margin-bottom:9px}
+  .wl-top{display:flex;justify-content:space-between;margin-bottom:3px}
+  .wl-name{font-size:13px;color:var(--white);font-weight:500}
+  .wl-task{font-size:10.5px;color:var(--grey)}
+  .wl-bar{height:8px;background:rgba(255,255,255,0.05);border-radius:4px;overflow:hidden}
+  .wl-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--teal2),var(--teal))}
+
+  /* ── TASK BOARD ── */
+  .task-board{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .col-head{display:flex;align-items:center;gap:9px;margin-bottom:12px}
+  .col-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+  .col-name{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--grey)}
+  .col-cnt{margin-left:auto;font-size:10px;color:var(--grey2);background:rgba(255,255,255,0.05);padding:2px 8px;border-radius:10px}
+  .task-col{background:rgba(255,255,255,0.02);border-radius:10px;padding:14px}
+  .task-card{background:var(--bg3);border:1px solid var(--b2);border-radius:8px;padding:12px 14px;margin-bottom:8px;transition:border-color .15s,transform .1s}
+  .task-card:hover{border-color:var(--border);transform:translateY(-1px)}
+  .task-card:last-child{margin-bottom:0}
+  .task-title{font-size:13px;color:var(--white);font-weight:500;margin-bottom:7px;line-height:1.3}
+  .task-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .t-tag{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600}
+  .t-eng{background:rgba(52,152,219,0.15);color:#3498db}
+  .t-ent{background:rgba(46,203,138,0.12);color:var(--teal)}
+  .t-des{background:rgba(155,89,182,0.15);color:#9b59b6}
+  .t-mfr{background:rgba(243,156,18,0.15);color:#f39c12}
+  .t-pres{background:rgba(231,76,60,0.12);color:#e74c3c}
+  .t-owner{font-size:10.5px;color:var(--teal)}
+  .t-date{font-family:var(--mono);font-size:9.5px;color:var(--grey2)}
+  .t-pri{width:7px;height:7px;border-radius:50%;margin-left:auto;flex-shrink:0}
+  .p-h{background:var(--red)}.p-m{background:var(--yellow)}.p-l{background:var(--green)}
+
+  /* add task btn */
+  .add-task{display:none;width:100%;padding:9px;background:rgba(46,203,138,0.06);border:1px dashed rgba(46,203,138,0.3);border-radius:7px;color:rgba(46,203,138,0.6);font-size:12px;cursor:pointer;text-align:center;transition:all .15s;margin-top:6px}
+  .add-task:hover{background:rgba(46,203,138,0.12);color:var(--teal)}
+  body.edit-mode .add-task{display:block}
+  body.edit-mode .task-card{cursor:pointer}
+  body.edit-mode .task-card:hover::after{content:'✏️';position:absolute;top:8px;right:8px;font-size:11px}
+  body.edit-mode .task-card{position:relative}
+
+  /* ── RISK TABLE ── */
+  .risk-tbl{width:100%;border-collapse:collapse;font-size:13px}
+  .risk-tbl th{padding:10px 12px;text-align:left;font-family:'Syne',sans-serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--grey);border-bottom:1px solid var(--border)}
+  .risk-tbl td{padding:11px 12px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle}
+  .risk-tbl tr:last-child td{border-bottom:none}
+  .risk-tbl tr:hover td{background:rgba(255,255,255,0.02)}
+  .rpill{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+  .rh{background:rgba(231,76,60,0.15);color:var(--red)}
+  .rm{background:rgba(243,156,18,0.15);color:var(--yellow)}
+  .rl{background:rgba(39,174,96,0.15);color:var(--green)}
+  .spill{font-size:10.5px;padding:3px 9px;border-radius:20px;font-weight:600}
+  .sc{background:rgba(39,174,96,0.12);color:var(--green)}
+  .sm{background:rgba(243,156,18,0.12);color:var(--yellow)}
+  .so{background:rgba(231,76,60,0.12);color:var(--red)}
+  .risk-tbl td.owner{font-size:12px;color:var(--white)}
+  .risk-tbl td.desc{font-size:11.5px;color:var(--grey)}
+
+  /* ── BUDGET ── */
+  .budget-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .bud-tbl{width:100%;border-collapse:collapse;font-size:13px}
+  .bud-tbl th{padding:9px 10px;text-align:left;font-family:'Syne',sans-serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--grey);border-bottom:1px solid var(--border)}
+  .bud-tbl td{padding:10px 10px;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--white)}
+  .bud-tbl tr:last-child td{border-bottom:none}
+  .bud-tbl tr:hover td{background:rgba(255,255,255,0.02)}
+  .bud-tbl .mono{font-family:var(--mono);font-size:12px}
+  .bar-t{height:9px;background:rgba(255,255,255,0.05);border-radius:4px;overflow:hidden;margin-top:5px}
+  .bar-f{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--teal2),var(--teal))}
+
+  /* sponsor cards */
+  .spon-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .spon-card{background:rgba(255,255,255,0.04);border:1px solid var(--b2);border-radius:9px;padding:14px;display:flex;justify-content:space-between;align-items:flex-start}
+
+  /* ── SCHEDULE ── */
+  .sch-row{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+  .sch-label{font-size:12px;color:var(--grey);width:180px;flex-shrink:0;text-align:right}
+  .sch-track{flex:1;height:16px;background:rgba(255,255,255,0.04);border-radius:5px;position:relative;overflow:visible}
+  .sch-bar{height:100%;border-radius:5px;position:absolute;top:0;display:flex;align-items:center;padding:0 7px}
+  .sch-bar-txt{font-size:9.5px;color:rgba(0,0,0,0.65);font-weight:700;white-space:nowrap;overflow:hidden}
+  .sch-now{position:absolute;top:0;bottom:0;width:2px;background:rgba(231,76,60,0.8);z-index:10}
+  .sch-now::before{content:'TODAY';position:absolute;top:-16px;left:3px;font-size:8px;color:var(--red);font-weight:700;font-family:var(--mono)}
+  .ms-dot{position:absolute;top:50%;transform:translate(-50%,-50%);width:11px;height:11px;border-radius:50%;z-index:5;border:2px solid var(--bg)}
+  .month-strip{display:flex;padding-left:190px;margin-bottom:6px;margin-top:2px}
+  .m-lbl{flex:1;font-size:9.5px;color:var(--grey2);text-align:center}
+
+  /* milestone row */
+  .ms-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:16px}
+  .ms-card{text-align:center;padding:14px;background:var(--bg3);border:1px solid var(--b2);border-radius:10px;border-top:3px solid var(--teal)}
+  .ms-card.done{border-top-color:var(--green)}
+  .ms-card.now{border-top-color:var(--yellow);background:rgba(243,156,18,0.05)}
+  .ms-label{font-size:9.5px;color:var(--teal);font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+  .ms-card.done .ms-label{color:var(--green)}
+  .ms-card.now .ms-label{color:var(--yellow)}
+  .ms-date{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--white);margin-top:4px}
+  .ms-sub{font-size:10px;color:var(--grey);margin-top:3px}
+
+  /* KPI detail */
+  .kpi-det-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px}
+  .kpi-det{background:var(--bg3);border:1px solid var(--b2);border-radius:12px;padding:20px}
+
+  /* SMART grid */
+  .smart-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+  .smart-card{text-align:center;padding:16px 10px;background:rgba(46,203,138,0.06);border-radius:9px;border:1px solid var(--border)}
+  .smart-letter{font-family:'Syne',sans-serif;font-size:30px;font-weight:800;color:var(--teal)}
+
+  /* scrollbar */
+  ::-webkit-scrollbar{width:4px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--grey2);border-radius:2px}
+
+  /* edit mode indicator */
+  .edit-banner{display:none;position:fixed;bottom:0;left:0;right:0;z-index:300;background:rgba(46,203,138,0.18);border-top:1px solid var(--border);padding:10px 24px;font-size:12px;color:var(--teal);font-weight:600;text-align:center}
+  body.edit-mode .edit-banner{display:block}
+
+  /* modal */
+  .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;align-items:center;justify-content:center}
+  .modal-backdrop.open{display:flex}
+  .modal{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:28px;width:500px;max-width:90vw}
+  .modal h3{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:20px;color:var(--white)}
+  .modal label{display:block;font-size:11px;color:var(--grey);text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px;margin-top:14px}
+  .modal input,.modal select,.modal textarea{width:100%;background:rgba(255,255,255,0.06);border:1px solid var(--b2);border-radius:7px;color:var(--white);padding:10px 12px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s}
+  .modal input:focus,.modal select:focus,.modal textarea:focus{border-color:var(--teal)}
+  .modal select option{background:var(--bg3)}
+  .modal-btns{display:flex;gap:10px;margin-top:22px;justify-content:flex-end}
+  .btn{padding:9px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .18s}
+  .btn-teal{background:rgba(46,203,138,0.2);border:1px solid var(--border);color:var(--teal)}
+  .btn-teal:hover{background:rgba(46,203,138,0.35)}
+  .btn-grey{background:rgba(255,255,255,0.06);border:1px solid var(--b2);color:var(--grey)}
+  .btn-grey:hover{color:var(--white)}
+  .btn-red{background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.25);color:var(--red)}
+  .btn-red:hover{background:rgba(231,76,60,0.25)}
+
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .panel.active{animation:fadeIn .22s ease}
+</style>
+</head>
+<body>
+
+<!-- ── TOP BAR ── -->
+<div class="topbar">
+  <div class="logo">
+    <svg viewBox="0 0 40 40" fill="none"><path d="M8 8 L28 8 L28 14 L14 14 L14 19 L24 19 L24 25 L14 25 L14 30 L28 30 L28 36 L8 36 Z" fill="#2ecb8a" opacity=".9"/><path d="M30 8 L38 8 L32 22 L38 36 L30 36 L24 22 Z" fill="#2ecb8a" opacity=".5"/></svg>
+    Endeavour Racing
+  </div>
+  <div class="divider"></div>
+  <div class="mc-title">Mission Control</div>
+  <div class="spacer"></div>
+  <div class="tabs">
+    <button class="tab active" onclick="showPanel('overview',this)">Overview</button>
+    <button class="tab" onclick="showPanel('tasks',this)">Task Board</button>
+    <button class="tab" onclick="showPanel('risks',this)">Risk Register</button>
+    <button class="tab" onclick="showPanel('budget',this)">Budget</button>
+    <button class="tab" onclick="showPanel('schedule',this)">Schedule</button>
+    <button class="tab" onclick="showPanel('kpis',this)">KPIs</button>
+  </div>
+  <div class="divider"></div>
+  <div class="edit-toggle" id="editToggle" onclick="toggleEdit()">✏️ Edit Mode</div>
+  <div class="clock" id="clock">—</div>
+  <div class="live-badge"><div class="live-dot"></div> LIVE</div>
+</div>
+
+<!-- ── MAIN ── -->
+<div class="main">
+
+<!-- ═══ OVERVIEW ═══ -->
+<div class="panel active" id="panel-overview">
+
+  <!-- KPI strip -->
+  <div class="kpi-strip">
+    <div class="kpi ok">
+      <div class="kpi-val editable" contenteditable="false" data-placeholder="90%">90%</div>
+      <div class="kpi-label editable" contenteditable="false" data-placeholder="KPI name">Task Completion Rate</div>
+      <div class="kpi-sub editable" contenteditable="false" data-placeholder="sub-detail">By assigned owner</div>
+      <div class="kpi-trend up editable" contenteditable="false">↑ On target — RACI validated</div>
+    </div>
+    <div class="kpi ok">
+      <div class="kpi-val editable" contenteditable="false" data-placeholder="±3d">±3d</div>
+      <div class="kpi-label editable" contenteditable="false">Schedule KPI</div>
+      <div class="kpi-sub editable" contenteditable="false">Max slip from baseline</div>
+      <div class="kpi-trend up editable" contenteditable="false">↑ All milestones met</div>
+    </div>
+    <div class="kpi warn">
+      <div class="kpi-val editable" contenteditable="false">£1,223</div>
+      <div class="kpi-label editable" contenteditable="false">Actual Spend</div>
+      <div class="kpi-sub editable" contenteditable="false">Budget available: £1,250</div>
+      <div class="kpi-trend up editable" contenteditable="false">£27 remaining</div>
+    </div>
+    <div class="kpi ok">
+      <div class="kpi-val editable" contenteditable="false">6</div>
+      <div class="kpi-label editable" contenteditable="false">Active Sponsors</div>
+      <div class="kpi-sub editable" contenteditable="false">Monetary + in-kind</div>
+      <div class="kpi-trend up editable" contenteditable="false">↑ All commitments met</div>
+    </div>
+    <div class="kpi blue">
+      <div class="kpi-val editable" contenteditable="false">9</div>
+      <div class="kpi-label editable" contenteditable="false">Risks Logged</div>
+      <div class="kpi-sub editable" contenteditable="false">4 open · 5 controlled</div>
+      <div class="kpi-trend down editable" contenteditable="false">⚠ R-03, R-04 escalate</div>
+    </div>
+  </div>
+
+  <div class="ov-grid">
+
+    <!-- Project health -->
+    <div class="card hl">
+      <div class="card-title">Project Health — Season Snapshot</div>
+      <div class="prog-row"><div class="prog-label editable" contenteditable="false">Schedule</div><div class="prog-track"><div class="prog-fill" style="width:92%"></div></div><div class="prog-val" style="color:var(--green)">On Track</div></div>
+      <div class="prog-row"><div class="prog-label editable" contenteditable="false">Engineering / CFD</div><div class="prog-track"><div class="prog-fill" style="width:100%"></div></div><div class="prog-val">Complete</div></div>
+      <div class="prog-row"><div class="prog-label editable" contenteditable="false">Car Manufacturing</div><div class="prog-track"><div class="prog-fill" style="width:100%"></div></div><div class="prog-val">Complete</div></div>
+      <div class="prog-row"><div class="prog-label editable" contenteditable="false">Portfolio Submission</div><div class="prog-track"><div class="prog-fill" style="width:100%"></div></div><div class="prog-val">Submitted</div></div>
+      <div class="prog-row"><div class="prog-label editable" contenteditable="false">Pit Display</div><div class="prog-track"><div class="prog-fill" style="width:100%"></div></div><div class="prog-val">Complete</div></div>
+      <div class="prog-row"><div class="prog-label editable" contenteditable="false">Presentation Prep</div><div class="prog-track"><div class="prog-fill warn" style="width:78%"></div></div><div class="prog-val" style="color:var(--yellow)">Rehearsing</div></div>
+      <div class="prog-row"><div class="prog-label editable" contenteditable="false">Sponsorship</div><div class="prog-track"><div class="prog-fill" style="width:100%"></div></div><div class="prog-val">All secured</div></div>
+      <div class="prog-row"><div class="prog-label editable" contenteditable="false">Budget</div><div class="prog-track"><div class="prog-fill warn" style="width:97.8%"></div></div><div class="prog-val" style="color:var(--yellow)">£27 left</div></div>
+      <div style="margin-top:16px">
+        <div class="card-title" style="margin-bottom:10px">Team Workload — Current Sprint</div>
+        <div class="wl-row"><div class="wl-top"><span class="wl-name editable" contenteditable="false">Leo Zhang <span style="font-size:10px;color:var(--teal)">TM</span></span><span class="wl-task editable" contenteditable="false">Presentation + logistics</span></div><div class="wl-bar"><div class="wl-fill" style="width:72%"></div></div></div>
+        <div class="wl-row"><div class="wl-top"><span class="wl-name editable" contenteditable="false">Aleks Tomczyk <span style="font-size:10px;color:var(--blue)">ENG</span></span><span class="wl-task editable" contenteditable="false">Final car scrutineering</span></div><div class="wl-bar"><div class="wl-fill" style="width:55%"></div></div></div>
+        <div class="wl-row"><div class="wl-top"><span class="wl-name editable" contenteditable="false">Ethan Jones <span style="font-size:10px;color:var(--yellow)">MFR</span></span><span class="wl-task editable" contenteditable="false">Transport case + spares</span></div><div class="wl-bar"><div class="wl-fill" style="width:42%"></div></div></div>
+        <div class="wl-row"><div class="wl-top"><span class="wl-name editable" contenteditable="false">Jayden Kwon <span style="font-size:10px;color:var(--teal)">MKT</span></span><span class="wl-task editable" contenteditable="false">Presentation slides</span></div><div class="wl-bar"><div class="wl-fill" style="width:65%"></div></div></div>
+        <div class="wl-row"><div class="wl-top"><span class="wl-name editable" contenteditable="false">Rahul Gandhi <span style="font-size:10px;color:var(--teal)">SPO</span></span><span class="wl-task editable" contenteditable="false">Final sponsor comms</span></div><div class="wl-bar"><div class="wl-fill" style="width:35%"></div></div></div>
+        <div class="wl-row"><div class="wl-top"><span class="wl-name editable" contenteditable="false">Sangyoon <span style="font-size:10px;color:var(--green)">FIN</span></span><span class="wl-task editable" contenteditable="false">Budget reconciliation</span></div><div class="wl-bar"><div class="wl-fill" style="width:50%"></div></div></div>
+      </div>
+    </div>
+
+    <!-- Activity Log -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div class="card-title" style="margin-bottom:0">Activity Log</div>
+        <button class="btn btn-teal" onclick="addLogEntry()" id="addLogBtn" style="display:none;padding:5px 12px;font-size:11px">+ Add Entry</button>
+      </div>
+      <div id="logEntries">
+        <div class="log-entry"><div class="log-date editable" contenteditable="false">Mar 19</div><div class="log-text editable" contenteditable="false">Presentation rehearsal 3 — full team in uniform</div></div>
+        <div class="log-entry"><div class="log-date editable" contenteditable="false">Mar 18</div><div class="log-text editable" contenteditable="false">R-04 compliance check passed — car cleared</div></div>
+        <div class="log-entry"><div class="log-date editable" contenteditable="false">Mar 17</div><div class="log-text editable" contenteditable="false">Pit display final assembly complete</div></div>
+        <div class="log-entry"><div class="log-date editable" contenteditable="false">Mar 15</div><div class="log-text editable" contenteditable="false">END21 all quality checks passed ✓</div></div>
+        <div class="log-entry"><div class="log-date editable" contenteditable="false">Mar 12</div><div class="log-text editable" contenteditable="false">Goldwater final logo placement approved by sponsor</div></div>
+        <div class="log-entry"><div class="log-date editable" contenteditable="false">Mar 09</div><div class="log-text editable" contenteditable="false">Nationals uniforms received — all 6 members fitted</div></div>
+        <div class="log-entry"><div class="log-date editable" contenteditable="false">Mar 05</div><div class="log-text editable" contenteditable="false">Portfolio digital submission confirmed by TM</div></div>
+        <div class="log-entry"><div class="log-date editable" contenteditable="false">Feb 28</div><div class="log-text editable" contenteditable="false">Post-regionals review — 3 improvement areas identified</div></div>
+        <div class="log-entry"><div class="log-date editable" contenteditable="false">Feb 12</div><div class="log-text editable" contenteditable="false">🏆 North London Regional Champions — 1st place overall</div></div>
+        <div class="log-entry"><div class="log-date editable" contenteditable="false">Jan 10</div><div class="log-text editable" contenteditable="false">Manufacturing complete gate — END21 passed scrutineering</div></div>
+      </div>
+    </div>
+
+    <!-- Upcoming + Recent risks -->
+    <div class="card">
+      <div class="card-title">Upcoming Deadlines</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px" id="deadlines">
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.2);border-radius:8px">
+          <div style="font-family:var(--mono);font-size:12px;color:var(--red);width:55px;flex-shrink:0">Mar 20</div>
+          <div class="editable" contenteditable="false" style="font-size:13px;color:var(--white)">Digital portfolio verify — final check</div>
+          <div style="margin-left:auto;flex-shrink:0"><span class="rpill rh" style="font-size:10px">URGENT</span></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:rgba(243,156,18,0.07);border:1px solid rgba(243,156,18,0.18);border-radius:8px">
+          <div style="font-family:var(--mono);font-size:12px;color:var(--yellow);width:55px;flex-shrink:0">Mar 22</div>
+          <div class="editable" contenteditable="false" style="font-size:13px;color:var(--white)">Reaction time practice + full rehearsal</div>
+          <div style="margin-left:auto;flex-shrink:0"><span class="rpill rm" style="font-size:10px">HIGH</span></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:rgba(243,156,18,0.07);border:1px solid rgba(243,156,18,0.18);border-radius:8px">
+          <div style="font-family:var(--mono);font-size:12px;color:var(--yellow);width:55px;flex-shrink:0">Mar 23</div>
+          <div class="editable" contenteditable="false" style="font-size:13px;color:var(--white)">Pack car + transport case final check</div>
+          <div style="margin-left:auto;flex-shrink:0"><span class="rpill rm" style="font-size:10px">HIGH</span></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:rgba(46,203,138,0.06);border:1px solid rgba(46,203,138,0.15);border-radius:8px">
+          <div style="font-family:var(--mono);font-size:12px;color:var(--teal);width:55px;flex-shrink:0">Mar 24</div>
+          <div class="editable" contenteditable="false" style="font-size:13px;color:var(--white)">🏁 UK National Finals — Competition Day</div>
+          <div style="margin-left:auto;flex-shrink:0"><span class="rpill rl" style="font-size:10px">GOAL</span></div>
+        </div>
+      </div>
+      <div class="card-title">Top Risks — Open</div>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(231,76,60,0.07);border:1px solid rgba(231,76,60,0.15);border-radius:8px"><span style="font-family:var(--mono);font-size:11px;color:var(--red)">R-04</span><span style="font-size:12.5px;color:var(--white)">Compliance / eligibility issue</span><span class="rpill rh" style="margin-left:auto;font-size:10px">5.0</span></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(231,76,60,0.07);border:1px solid rgba(231,76,60,0.15);border-radius:8px"><span style="font-family:var(--mono);font-size:11px;color:var(--red)">R-03</span><span style="font-size:12.5px;color:var(--white)">Submission error</span><span class="rpill rh" style="margin-left:auto;font-size:10px">4.0</span></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(243,156,18,0.07);border:1px solid rgba(243,156,18,0.15);border-radius:8px"><span style="font-family:var(--mono);font-size:11px;color:var(--yellow)">R-09</span><span style="font-size:12.5px;color:var(--white)">Late deliverable integration</span><span class="rpill rm" style="margin-left:auto;font-size:10px">2.8</span></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(243,156,18,0.05);border:1px solid rgba(243,156,18,0.1);border-radius:8px"><span style="font-family:var(--mono);font-size:11px;color:var(--yellow)">R-05</span><span style="font-size:12.5px;color:var(--white)">Car damage in testing</span><span class="rpill rm" style="margin-left:auto;font-size:10px">1.8</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TASK BOARD ═══ -->
+<div class="panel" id="panel-tasks">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+    <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--white)">Task Board — Nationals Sprint</div>
+    <button class="btn btn-teal" onclick="openTaskModal()" id="addTaskBtn" style="display:none">+ Add Task</button>
+  </div>
+  <div class="task-board" id="taskBoard">
+    <div class="task-col" id="col-open">
+      <div class="col-head"><div class="col-dot" style="background:var(--grey2)"></div><div class="col-name">Open</div><div class="col-cnt" id="cnt-open">3</div></div>
+      <div class="task-card" onclick="editTask(this)"><div class="task-title editable" contenteditable="false">Reaction time practice session</div><div class="task-meta"><span class="t-tag t-eng">Racing</span><span class="t-owner editable" contenteditable="false">All</span><span class="t-date editable" contenteditable="false">Mar 22</span><div class="t-pri p-h"></div></div></div>
+      <div class="task-card" onclick="editTask(this)"><div class="task-title editable" contenteditable="false">Uniform ironing + pack for nationals</div><div class="task-meta"><span class="t-tag t-ent">Enterprise</span><span class="t-owner editable" contenteditable="false">Leo</span><span class="t-date editable" contenteditable="false">Mar 23</span><div class="t-pri p-m"></div></div></div>
+      <div class="task-card" onclick="editTask(this)"><div class="task-title editable" contenteditable="false">Judges Q&A preparation — all sections</div><div class="task-meta"><span class="t-tag t-pres">Presentation</span><span class="t-owner editable" contenteditable="false">All</span><span class="t-date editable" contenteditable="false">Mar 23</span><div class="t-pri p-h"></div></div></div>
+      <button class="add-task" onclick="addTask('open')">+ Add task</button>
+    </div>
+    <div class="task-col" id="col-progress">
+      <div class="col-head"><div class="col-dot" style="background:var(--yellow)"></div><div class="col-name">In Progress</div><div class="col-cnt" id="cnt-progress">5</div></div>
+      <div class="task-card" onclick="editTask(this)" style="border-color:rgba(243,156,18,0.25)"><div class="task-title editable" contenteditable="false">Presentation full-team rehearsal × 3</div><div class="task-meta"><span class="t-tag t-pres">Presentation</span><span class="t-owner editable" contenteditable="false">All</span><span class="t-date editable" contenteditable="false">Mar 22</span><div class="t-pri p-h"></div></div></div>
+      <div class="task-card" onclick="editTask(this)" style="border-color:rgba(243,156,18,0.25)"><div class="task-title editable" contenteditable="false">Car transport case prep + foam insert</div><div class="task-meta"><span class="t-tag t-mfr">Manufacturing</span><span class="t-owner editable" contenteditable="false">Ethan</span><span class="t-date editable" contenteditable="false">Mar 22</span><div class="t-pri p-h"></div></div></div>
+      <div class="task-card" onclick="editTask(this)" style="border-color:rgba(243,156,18,0.25)"><div class="task-title editable" contenteditable="false">Pit display final assembly + photos</div><div class="task-meta"><span class="t-tag t-des">Design</span><span class="t-owner editable" contenteditable="false">Jayden</span><span class="t-date editable" contenteditable="false">Mar 21</span><div class="t-pri p-m"></div></div></div>
+      <div class="task-card" onclick="editTask(this)" style="border-color:rgba(243,156,18,0.25)"><div class="task-title editable" contenteditable="false">Final sponsor assets signed off</div><div class="task-meta"><span class="t-tag t-ent">Enterprise</span><span class="t-owner editable" contenteditable="false">Rahul</span><span class="t-date editable" contenteditable="false">Mar 20</span><div class="t-pri p-l"></div></div></div>
+      <div class="task-card" onclick="editTask(this)" style="border-color:rgba(243,156,18,0.25)"><div class="task-title editable" contenteditable="false">Budget final reconciliation</div><div class="task-meta"><span class="t-tag t-ent">Finance</span><span class="t-owner editable" contenteditable="false">Sangyoon</span><span class="t-date editable" contenteditable="false">Mar 20</span><div class="t-pri p-l"></div></div></div>
+      <button class="add-task" onclick="addTask('progress')">+ Add task</button>
+    </div>
+    <div class="task-col" id="col-review">
+      <div class="col-head"><div class="col-dot" style="background:var(--blue)"></div><div class="col-name">Review</div><div class="col-cnt" id="cnt-review">2</div></div>
+      <div class="task-card" onclick="editTask(this)" style="border-color:rgba(52,152,219,0.25)"><div class="task-title editable" contenteditable="false">END21 scrutineering checklist — all dimensions</div><div class="task-meta"><span class="t-tag t-eng">Engineering</span><span class="t-owner editable" contenteditable="false">Aleks</span><span class="t-date editable" contenteditable="false">Mar 20</span><div class="t-pri p-h"></div></div></div>
+      <div class="task-card" onclick="editTask(this)" style="border-color:rgba(52,152,219,0.25)"><div class="task-title editable" contenteditable="false">Digital portfolio submission verify</div><div class="task-meta"><span class="t-tag t-ent">Enterprise</span><span class="t-owner editable" contenteditable="false">Leo</span><span class="t-date editable" contenteditable="false">Mar 19</span><div class="t-pri p-h"></div></div></div>
+      <button class="add-task" onclick="addTask('review')">+ Add task</button>
+    </div>
+    <div class="task-col" id="col-done">
+      <div class="col-head"><div class="col-dot" style="background:var(--green)"></div><div class="col-name">Done</div><div class="col-cnt" id="cnt-done">14</div></div>
+      <div class="task-card" onclick="editTask(this)" style="opacity:.6"><div class="task-title editable" contenteditable="false">Portfolio print + bind — both copies</div><div class="task-meta"><span class="t-tag t-ent">Enterprise</span><span class="t-owner editable" contenteditable="false">Leo</span></div></div>
+      <div class="task-card" onclick="editTask(this)" style="opacity:.6"><div class="task-title editable" contenteditable="false">END21 CNC car body complete</div><div class="task-meta"><span class="t-tag t-mfr">MFR</span><span class="t-owner editable" contenteditable="false">Ethan</span></div></div>
+      <div class="task-card" onclick="editTask(this)" style="opacity:.6"><div class="task-title editable" contenteditable="false">CFD END21 analysis — 21 iterations</div><div class="task-meta"><span class="t-tag t-eng">Eng</span><span class="t-owner editable" contenteditable="false">Aleks</span></div></div>
+      <div class="task-card" onclick="editTask(this)" style="opacity:.6"><div class="task-title editable" contenteditable="false">Goldwater logo placement approved</div><div class="task-meta"><span class="t-tag t-ent">Sponsor</span><span class="t-owner editable" contenteditable="false">Rahul</span></div></div>
+      <div class="task-card" onclick="editTask(this)" style="opacity:.6"><div class="task-title editable" contenteditable="false">Nylon-12 SLS wings received + fitted</div><div class="task-meta"><span class="t-tag t-mfr">MFR</span><span class="t-owner editable" contenteditable="false">Ethan</span></div></div>
+      <div class="task-card" onclick="editTask(this)" style="opacity:.6"><div class="task-title editable" contenteditable="false">Regional competition — 1st place 🏆</div><div class="task-meta"><span class="t-tag t-eng">Racing</span><span class="t-owner editable" contenteditable="false">All</span></div></div>
+      <div class="task-card" onclick="editTask(this)" style="opacity:.6"><div class="task-title editable" contenteditable="false">3DPrintUK wings ordered + delivered</div><div class="task-meta"><span class="t-tag t-mfr">MFR</span><span class="t-owner editable" contenteditable="false">Ethan</span></div></div>
+      <button class="add-task" onclick="addTask('done')">+ Add task</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ RISK REGISTER ═══ -->
+<div class="panel" id="panel-risks">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+    <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--white)">Risk Register — Live Control System</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span style="font-size:12px;color:var(--grey)">Escalate threshold: ≥3.1 · Updated weekly + at gates</span>
+      <button class="btn btn-teal" onclick="openRiskModal()" id="addRiskBtn" style="display:none">+ Add Risk</button>
+    </div>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <table class="risk-tbl">
+      <thead><tr><th style="width:60px">ID</th><th style="width:220px">Risk</th><th style="width:90px">Threat</th><th style="width:100px">Priority</th><th>Trigger</th><th>Control Action</th><th style="width:130px">Owner</th><th style="width:110px">Status</th></tr></thead>
+      <tbody id="riskTable">
+        <tr><td style="font-family:var(--mono);color:var(--teal);font-size:12px" class="editable" contenteditable="false">R-01</td><td class="editable" contenteditable="false" style="font-weight:500">Manufacturing delay</td><td><span class="rpill rh">3.2 HIGH</span></td><td style="color:var(--red);font-size:12px;font-weight:700">ESCALATE</td><td class="desc editable" contenteditable="false">No supplier confirm by agreed date</td><td class="desc editable" contenteditable="false">Switch backup supplier; simplify part if needed</td><td class="owner editable" contenteditable="false">Head of Eng</td><td><span class="spill sc">Controlled</span></td></tr>
+        <tr><td style="font-family:var(--mono);color:var(--teal);font-size:12px" class="editable" contenteditable="false">R-02</td><td class="editable" contenteditable="false" style="font-weight:500">Manufacturing tolerance error</td><td><span class="rpill rm">3.0 MED</span></td><td style="color:var(--yellow);font-size:12px;font-weight:700">MITIGATE</td><td class="desc editable" contenteditable="false">Part fails inspection check</td><td class="desc editable" contenteditable="false">Reprint/remachine with verified settings; tighten checks</td><td class="owner editable" contenteditable="false">Head of Eng</td><td><span class="spill sm">Monitored</span></td></tr>
+        <tr><td style="font-family:var(--mono);color:var(--teal);font-size:12px" class="editable" contenteditable="false">R-03</td><td class="editable" contenteditable="false" style="font-weight:500">Submission error</td><td><span class="rpill rh">4.0 HIGH</span></td><td style="color:var(--red);font-size:12px;font-weight:700">ESCALATE</td><td class="desc editable" contenteditable="false">File rejected or missing requirement</td><td class="desc editable" contenteditable="false">Correct and resubmit same day via checklist</td><td class="owner editable" contenteditable="false">Team Manager</td><td><span class="spill sm">Monitored</span></td></tr>
+        <tr><td style="font-family:var(--mono);color:var(--teal);font-size:12px" class="editable" contenteditable="false">R-04</td><td class="editable" contenteditable="false" style="font-weight:500">Compliance / eligibility issue</td><td><span class="rpill rh">5.0 HIGH</span></td><td style="color:var(--red);font-size:12px;font-weight:700">ESCALATE</td><td class="desc editable" contenteditable="false">Rule ambiguity or non-compliant feature flagged</td><td class="desc editable" contenteditable="false">Freeze change; verify against regs; compliant alternative</td><td class="owner editable" contenteditable="false">Team Manager</td><td><span class="spill so">Open</span></td></tr>
+        <tr><td style="font-family:var(--mono);color:var(--teal);font-size:12px" class="editable" contenteditable="false">R-05</td><td class="editable" contenteditable="false" style="font-weight:500">Car damage in testing</td><td><span class="rpill rm">1.8 MED</span></td><td style="color:var(--yellow);font-size:12px;font-weight:600">MITIGATE</td><td class="desc editable" contenteditable="false">Structural crack or repeated run failures</td><td class="desc editable" contenteditable="false">Spare parts ready; reinforce weak point; limit high-risk tests</td><td class="owner editable" contenteditable="false">Head of Mfr</td><td><span class="spill so">Open</span></td></tr>
+        <tr><td style="font-family:var(--mono);color:var(--teal);font-size:12px" class="editable" contenteditable="false">R-06</td><td class="editable" contenteditable="false" style="font-weight:500">Car damage in transit</td><td><span class="rpill rm">2.4 MED</span></td><td style="color:var(--grey);font-size:12px;font-weight:600">MITIGATE</td><td class="desc editable" contenteditable="false">Packaging check fails / transit warning</td><td class="desc editable" contenteditable="false">Hard case with foam; carry critical parts separately</td><td class="owner editable" contenteditable="false">Head of Mfr</td><td><span class="spill sc">Controlled</span></td></tr>
+        <tr><td style="font-family:var(--mono);color:var(--teal);font-size:12px" class="editable" contenteditable="false">R-07</td><td class="editable" contenteditable="false" style="font-weight:500">Sponsor cash delay</td><td><span class="rpill rm">2.0 MED</span></td><td style="color:var(--grey);font-size:12px;font-weight:600">MITIGATE</td><td class="desc editable" contenteditable="false">Funds not received by planned spend date</td><td class="desc editable" contenteditable="false">Rephase spend; prioritise essentials; activate in-kind options</td><td class="owner editable" contenteditable="false">Head of Spo</td><td><span class="spill sc">Controlled</span></td></tr>
+        <tr><td style="font-family:var(--mono);color:var(--teal);font-size:12px" class="editable" contenteditable="false">R-08</td><td class="editable" contenteditable="false" style="font-weight:500">Key member unavailability</td><td><span class="rpill rm">1.6 MED</span></td><td style="color:var(--yellow);font-size:12px;font-weight:600">MITIGATE</td><td class="desc editable" contenteditable="false">Missed handover / absence during critical week</td><td class="desc editable" contenteditable="false">Task reallocation; backup owner assigned in advance</td><td class="owner editable" contenteditable="false">Team Manager</td><td><span class="spill sm">Monitored</span></td></tr>
+        <tr><td style="font-family:var(--mono);color:var(--teal);font-size:12px" class="editable" contenteditable="false">R-09</td><td class="editable" contenteditable="false" style="font-weight:500">Late deliverable integration</td><td><span class="rpill rm">2.8 MED</span></td><td style="color:var(--grey);font-size:12px;font-weight:600">MITIGATE</td><td class="desc editable" contenteditable="false">Milestone missed at weekly review</td><td class="desc editable" contenteditable="false">Re-plan sprint; reduce scope; assign extra support resource</td><td class="owner editable" contenteditable="false">Head of Fin</td><td><span class="spill so">Open</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px">
+    <div style="background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.2);border-radius:10px;padding:16px"><div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--red);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px">HIGH ≥3.1 — Escalate</div><div style="font-size:12.5px;color:var(--grey)">Immediate control action. Owner + deadline set. Progress tracked closely. Current: R-01, R-03, R-04</div></div>
+    <div style="background:rgba(243,156,18,0.07);border:1px solid rgba(243,156,18,0.18);border-radius:10px;padding:16px"><div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--yellow);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px">MED 1.3–3.0 — Mitigate</div><div style="font-size:12.5px;color:var(--grey)">Named owner assigned. Reviewed routinely through build cycle. Current: R-02, R-05, R-06, R-07, R-08, R-09</div></div>
+    <div style="background:rgba(39,174,96,0.07);border:1px solid rgba(39,174,96,0.18);border-radius:10px;padding:16px"><div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--green);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px">LOW &lt;1.3 — Monitor</div><div style="font-size:12.5px;color:var(--grey)">Low priority. Monitored and reviewed at key milestones only. None currently active.</div></div>
+  </div>
+</div>
+
+<!-- ═══ BUDGET ═══ -->
+<div class="panel" id="panel-budget">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+    <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--white)">Budget &amp; Sponsorship</div>
+    <div style="font-size:12px;color:var(--grey)">Phase-based release · PERT 3-point estimates · evidence-led updates</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:16px">
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="bud-tbl">
+        <thead><tr><th>Item</th><th>WBS Branch</th><th>Budgeted</th><th>Actual</th><th>Δ</th></tr></thead>
+        <tbody id="budgetTable">
+          <tr><td class="editable" contenteditable="false">Pit display + build</td><td style="font-size:11px;color:var(--grey)" class="editable" contenteditable="false">Presentation</td><td class="mono editable" contenteditable="false">£248.00</td><td class="mono editable" contenteditable="false" style="color:var(--green)">£231.67</td><td class="mono" style="color:var(--green)">-£16.33</td></tr>
+          <tr><td class="editable" contenteditable="false">Uniforms (total)</td><td style="font-size:11px;color:var(--grey)" class="editable" contenteditable="false">Presentation</td><td class="mono editable" contenteditable="false">£578.67</td><td class="mono editable" contenteditable="false" style="color:var(--yellow)">£578.67</td><td class="mono" style="color:var(--grey)">£0</td></tr>
+          <tr><td class="editable" contenteditable="false">Spray painting</td><td style="font-size:11px;color:var(--grey)" class="editable" contenteditable="false">Engineering</td><td class="mono editable" contenteditable="false">£10.67</td><td class="mono editable" contenteditable="false" style="color:var(--green)">£6.00</td><td class="mono" style="color:var(--green)">-£4.67</td></tr>
+          <tr><td class="editable" contenteditable="false">Software licensing</td><td style="font-size:11px;color:var(--grey)" class="editable" contenteditable="false">Engineering</td><td class="mono editable" contenteditable="false">£55.83</td><td class="mono editable" contenteditable="false" style="color:var(--green)">£40.00</td><td class="mono" style="color:var(--green)">-£15.83</td></tr>
+          <tr><td class="editable" contenteditable="false">3D printing (proto)</td><td style="font-size:11px;color:var(--grey)" class="editable" contenteditable="false">Engineering</td><td class="mono editable" contenteditable="false">£86.00</td><td class="mono editable" contenteditable="false" style="color:var(--yellow)">£86.00</td><td class="mono" style="color:var(--grey)">£0</td></tr>
+          <tr><td class="editable" contenteditable="false">CNC + workshop</td><td style="font-size:11px;color:var(--grey)" class="editable" contenteditable="false">Engineering</td><td class="mono editable" contenteditable="false">£26.33</td><td class="mono editable" contenteditable="false" style="color:var(--green)">£26.33</td><td class="mono" style="color:var(--grey)">£0</td></tr>
+          <tr><td class="editable" contenteditable="false">Website (domain)</td><td style="font-size:11px;color:var(--grey)" class="editable" contenteditable="false">Enterprise</td><td class="mono editable" contenteditable="false">£24.17</td><td class="mono editable" contenteditable="false" style="color:var(--green)">£24.17</td><td class="mono" style="color:var(--grey)">£0</td></tr>
+          <tr><td class="editable" contenteditable="false">Registration fee</td><td style="font-size:11px;color:var(--grey)" class="editable" contenteditable="false">Research</td><td class="mono editable" contenteditable="false">£100.00</td><td class="mono editable" contenteditable="false" style="color:var(--yellow)">£100.00</td><td class="mono" style="color:var(--grey)">£0</td></tr>
+          <tr><td class="editable" contenteditable="false">Accommodation</td><td style="font-size:11px;color:var(--grey)" class="editable" contenteditable="false">Enterprise</td><td class="mono editable" contenteditable="false">£180.00</td><td class="mono editable" contenteditable="false" style="color:var(--yellow)">£180.00</td><td class="mono" style="color:var(--grey)">£0</td></tr>
+          <tr><td class="editable" contenteditable="false">Additional mfr/refine</td><td style="font-size:11px;color:var(--grey)" class="editable" contenteditable="false">Engineering</td><td class="mono editable" contenteditable="false">£52.38</td><td class="mono editable" contenteditable="false" style="color:var(--green)">£9.64</td><td class="mono" style="color:var(--green)">-£42.74</td></tr>
+          <tr style="background:rgba(255,255,255,0.03);border-top:1px solid var(--border)"><td style="font-weight:700;color:var(--white)">TOTAL</td><td></td><td class="mono" style="font-weight:700;font-size:13px;color:var(--white)">£1,362.05</td><td class="mono" style="font-weight:700;font-size:13px;color:var(--teal)">£1,282.48</td><td class="mono" style="font-weight:700;color:var(--green)">-£79.57</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card">
+        <div class="card-title">Budget Bars</div>
+        <div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:var(--grey)">Available</span><span style="font-family:var(--mono);font-size:13px;color:var(--teal);font-weight:700">£1,250</span></div><div class="bar-t"><div class="bar-f" style="width:100%"></div></div></div>
+        <div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:var(--grey)">Projected spend</span><span style="font-family:var(--mono);font-size:13px;color:var(--white);font-weight:700">£1,042</span></div><div class="bar-t"><div class="bar-f" style="width:83.4%"></div></div></div>
+        <div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:var(--grey)">Actual spend</span><span style="font-family:var(--mono);font-size:13px;color:var(--white);font-weight:700">£1,223</span></div><div class="bar-t"><div class="bar-f" style="width:97.8%;background:linear-gradient(90deg,#c08010,var(--yellow))"></div></div></div>
+        <div style="padding:10px;background:rgba(46,203,138,0.07);border-radius:7px;font-size:12px;color:var(--grey);margin-top:8px">Revenue target set <span style="color:var(--teal);font-weight:600">20% above</span> projected. Engineering underspend offset variances. <span style="color:var(--teal)">£27 remaining.</span></div>
+      </div>
+      <div class="card" style="flex:1">
+        <div class="card-title">PERT 3-Point Estimates</div>
+        <table class="bud-tbl" style="font-size:12px">
+          <thead><tr><th>Item</th><th>Expected</th><th>±σ</th><th>Uncert.</th></tr></thead>
+          <tbody>
+            <tr><td class="editable" contenteditable="false">Pit Display</td><td class="mono editable" contenteditable="false">£231.67</td><td class="mono editable" contenteditable="false" style="color:var(--yellow)">±£15.0</td><td class="editable" contenteditable="false" style="color:var(--grey)">6.47%</td></tr>
+            <tr><td class="editable" contenteditable="false">Uniforms</td><td class="mono editable" contenteditable="false">£578.33</td><td class="mono editable" contenteditable="false" style="color:var(--yellow)">±£25.0</td><td class="editable" contenteditable="false" style="color:var(--grey)">4.32%</td></tr>
+            <tr><td class="editable" contenteditable="false">Spray paint</td><td class="mono editable" contenteditable="false">£10.67</td><td class="mono editable" contenteditable="false" style="color:var(--red)">±£2.0</td><td class="editable" contenteditable="false" style="color:var(--red)">18.75%</td></tr>
+            <tr><td class="editable" contenteditable="false">Software</td><td class="mono editable" contenteditable="false">£55.83</td><td class="mono editable" contenteditable="false" style="color:var(--yellow)">±£5.8</td><td class="editable" contenteditable="false" style="color:var(--grey)">10.45%</td></tr>
+            <tr><td class="editable" contenteditable="false">3D Printing</td><td class="mono editable" contenteditable="false">£86.00</td><td class="mono editable" contenteditable="false" style="color:var(--yellow)">±£5.3</td><td class="editable" contenteditable="false" style="color:var(--grey)">6.20%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Sponsorship Income</div>
+      <div style="display:flex;flex-direction:column;gap:9px">
+        <div class="spon-card"><div><div style="font-size:13px;font-weight:700;color:var(--white)" class="editable" contenteditable="false">Goldwater</div><div style="font-size:11px;color:var(--teal)" class="editable" contenteditable="false">Title Sponsor</div><div style="font-size:11px;color:var(--grey)" class="editable" contenteditable="false">Car bonnet · portfolio · all social</div></div><div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--teal)" class="editable" contenteditable="false">£500</div></div>
+        <div class="spon-card"><div><div style="font-size:13px;font-weight:700;color:var(--white)" class="editable" contenteditable="false">S'way + 3 others</div><div style="font-size:11px;color:var(--teal)" class="editable" contenteditable="false">Shared Gold Package</div><div style="font-size:11px;color:var(--grey)" class="editable" contenteditable="false">Waterfronts · C&T Legal · Acorn Vet</div></div><div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--teal)" class="editable" contenteditable="false">£950</div></div>
+        <div class="spon-card"><div><div style="font-size:13px;font-weight:700;color:var(--white)" class="editable" contenteditable="false">Staedtler</div><div style="font-size:11px;color:var(--teal)" class="editable" contenteditable="false">In-kind tools</div></div><div style="font-size:13px;color:var(--grey)" class="editable" contenteditable="false">£300 val</div></div>
+        <div class="spon-card"><div><div style="font-size:13px;font-weight:700;color:var(--white)" class="editable" contenteditable="false">SimScale</div><div style="font-size:11px;color:var(--teal)" class="editable" contenteditable="false">~5,000 CFD hrs free</div></div><div style="font-size:11px;color:var(--grey)">In-kind</div></div>
+        <div class="spon-card"><div><div style="font-size:13px;font-weight:700;color:var(--white)" class="editable" contenteditable="false">3DPrintUK</div><div style="font-size:11px;color:var(--teal)" class="editable" contenteditable="false">20% discount + priority</div></div><div style="font-size:11px;color:var(--grey)">In-kind</div></div>
+      </div>
+      <div style="margin-top:14px;padding:14px;background:rgba(46,203,138,0.08);border:1px solid rgba(46,203,138,0.22);border-radius:9px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;color:var(--grey)">Total monetary income</span><span style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--teal)">£1,450</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SCHEDULE ═══ -->
+<div class="panel" id="panel-schedule">
+  <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--white);margin-bottom:16px">Season Schedule — Sep 2025 → Mar 2026</div>
+  <div class="card" style="margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div class="card-title" style="margin-bottom:0">Gantt Timeline</div><div style="font-size:11px;color:var(--grey)">Today: Mar 19 · Nationals: Mar 24</div></div>
+    <div class="month-strip">
+      <div class="m-lbl">Sep 25</div><div class="m-lbl">Oct 25</div><div class="m-lbl">Nov 25</div><div class="m-lbl">Dec 25</div><div class="m-lbl">Jan 26</div><div class="m-lbl">Feb 26</div><div class="m-lbl">Mar 26</div>
+    </div>
+    <div>
+      <div class="sch-row"><div class="sch-label editable" contenteditable="false">Team Setup</div><div class="sch-track"><div class="sch-bar" style="left:0%;width:8%;background:rgba(46,203,138,0.55)"><div class="sch-bar-txt">Setup</div></div></div></div>
+      <div class="sch-row"><div class="sch-label editable" contenteditable="false">Research / General Aero</div><div class="sch-track"><div class="sch-bar" style="left:6%;width:22%;background:rgba(52,152,219,0.65)"><div class="sch-bar-txt">Research & CAD</div></div></div></div>
+      <div class="sch-row"><div class="sch-label editable" contenteditable="false">Sponsorship Campaign</div><div class="sch-track"><div class="sch-bar" style="left:5%;width:55%;background:rgba(46,203,138,0.45)"><div class="sch-bar-txt">Sponsorship Ongoing</div></div></div></div>
+      <div class="sch-row"><div class="sch-label editable" contenteditable="false">CFD Analysis (SimScale)</div><div class="sch-track"><div class="sch-bar" style="left:12%;width:38%;background:rgba(155,89,182,0.65)"><div class="sch-bar-txt">CFD END01→END21</div></div></div></div>
+      <div class="sch-row"><div class="sch-label editable" contenteditable="false">CAD (Onshape)</div><div class="sch-track"><div class="sch-bar" style="left:8%;width:40%;background:rgba(52,152,219,0.55)"><div class="sch-bar-txt">CAD Design Iterations</div></div></div></div>
+      <div class="sch-row"><div class="sch-label editable" contenteditable="false">Portfolio Writing</div><div class="sch-track"><div class="sch-bar" style="left:38%;width:38%;background:rgba(46,203,138,0.5)"><div class="sch-bar-txt">Portfolio Writing</div></div></div></div>
+      <div class="sch-row"><div class="sch-label editable" contenteditable="false">CNC Manufacture</div><div class="sch-track"><div class="sch-bar" style="left:48%;width:18%;background:rgba(243,156,18,0.75)"><div class="sch-bar-txt">CNC + Finishing</div></div><div class="ms-dot" style="left:66%;background:var(--teal)"></div></div></div>
+      <div class="sch-row"><div class="sch-label editable" contenteditable="false">Track Testing</div><div class="sch-track"><div class="sch-bar" style="left:64%;width:10%;background:rgba(231,76,60,0.55)"><div class="sch-bar-txt">4 Runs</div></div></div></div>
+      <div class="sch-row"><div class="sch-label editable" contenteditable="false">Pit Display Build</div><div class="sch-track"><div class="sch-bar" style="left:70%;width:20%;background:rgba(52,152,219,0.55)"><div class="sch-bar-txt">Pit Display</div></div></div></div>
+      <div class="sch-row"><div class="sch-label editable" contenteditable="false">Marketing & Social Media</div><div class="sch-track"><div class="sch-bar" style="left:0%;width:78%;background:rgba(46,203,138,0.35)"><div class="sch-bar-txt">Marketing Throughout Season</div></div></div></div>
+      <div class="sch-row"><div class="sch-label editable" contenteditable="false">Presentation Prep</div><div class="sch-track"><div class="sch-bar" style="left:76%;width:22%;background:rgba(155,89,182,0.7)"><div class="sch-bar-txt">Script & Rehearsals</div></div><div class="sch-now" style="left:97.2%"></div></div></div>
+    </div>
+    <div style="font-size:10px;color:var(--grey2);margin-top:8px;padding-left:190px">KPI: completion of major tasks within ±3 days of planned finish date · Delays recovered via additional after-school sessions in DTE department</div>
+  </div>
+  <div class="ms-strip">
+    <div class="ms-card done"><div class="ms-label">✓ Project Start</div><div class="ms-date editable" contenteditable="false">Sep 3</div><div class="ms-sub">2025</div></div>
+    <div class="ms-card done"><div class="ms-label">✓ Design Freeze</div><div class="ms-date editable" contenteditable="false">Oct 10</div><div class="ms-sub">CAD locked</div></div>
+    <div class="ms-card done"><div class="ms-label">✓ Manufacture Complete</div><div class="ms-date editable" contenteditable="false">Jan 10</div><div class="ms-sub">Testing start</div></div>
+    <div class="ms-card done"><div class="ms-label">✓ Regionals 🏆</div><div class="ms-date editable" contenteditable="false">Feb 12</div><div class="ms-sub">1st place</div></div>
+    <div class="ms-card now"><div class="ms-label">🏁 Nationals</div><div class="ms-date editable" contenteditable="false">Mar 24</div><div class="ms-sub">5 days</div></div>
+  </div>
+</div>
+
+<!-- ═══ KPIs ═══ -->
+<div class="panel" id="panel-kpis">
+  <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--white);margin-bottom:16px">Key Performance Indicators — SMART Framework</div>
+  <div class="kpi-det-grid">
+    <div class="kpi-det">
+      <div class="card-title">Schedule KPI</div>
+      <div style="display:flex;justify-content:center;margin:14px 0">
+        <svg width="130" height="130" viewBox="0 0 130 130">
+          <circle cx="65" cy="65" r="54" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="12"/>
+          <circle cx="65" cy="65" r="54" fill="none" stroke="#27ae60" stroke-width="12" stroke-dasharray="339" stroke-dashoffset="34" stroke-linecap="round" transform="rotate(-90 65 65)"/>
+          <text x="65" y="60" text-anchor="middle" font-family="Syne,sans-serif" font-size="22" font-weight="800" fill="#27ae60">90%</text>
+          <text x="65" y="78" text-anchor="middle" font-size="10" fill="#7a8499">on schedule</text>
+        </svg>
+      </div>
+      <div style="font-size:12.5px;color:var(--grey);text-align:center">KPI: major tasks within <span style="color:var(--teal)">±3 days</span> of planned finish</div>
+      <div style="margin-top:10px;padding:9px;background:rgba(39,174,96,0.08);border-radius:7px;font-size:12px;color:var(--green);text-align:center">✓ All critical path tasks met on time</div>
+    </div>
+    <div class="kpi-det">
+      <div class="card-title">Task Ownership KPI</div>
+      <div style="display:flex;justify-content:center;margin:14px 0">
+        <svg width="130" height="130" viewBox="0 0 130 130">
+          <circle cx="65" cy="65" r="54" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="12"/>
+          <circle cx="65" cy="65" r="54" fill="none" stroke="#2ecb8a" stroke-width="12" stroke-dasharray="339" stroke-dashoffset="34" stroke-linecap="round" transform="rotate(-90 65 65)"/>
+          <text x="65" y="60" text-anchor="middle" font-family="Syne,sans-serif" font-size="22" font-weight="800" fill="#2ecb8a">90%</text>
+          <text x="65" y="78" text-anchor="middle" font-size="10" fill="#7a8499">by assigned owner</text>
+        </svg>
+      </div>
+      <div style="font-size:12.5px;color:var(--grey);text-align:center">90% of tasks completed by their <span style="color:var(--teal)">originally assigned</span> member</div>
+      <div style="margin-top:10px;padding:9px;background:rgba(46,203,138,0.08);border-radius:7px;font-size:12px;color:var(--teal);text-align:center">✓ RACI Matrix validated in practice</div>
+    </div>
+    <div class="kpi-det">
+      <div class="card-title">Budget KPI</div>
+      <div style="display:flex;justify-content:center;margin:14px 0">
+        <svg width="130" height="130" viewBox="0 0 130 130">
+          <circle cx="65" cy="65" r="54" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="12"/>
+          <circle cx="65" cy="65" r="54" fill="none" stroke="#f39c12" stroke-width="12" stroke-dasharray="339" stroke-dashoffset="7" stroke-linecap="round" transform="rotate(-90 65 65)"/>
+          <text x="65" y="56" text-anchor="middle" font-family="Syne,sans-serif" font-size="18" font-weight="800" fill="#f39c12">97.8%</text>
+          <text x="65" y="72" text-anchor="middle" font-size="10" fill="#7a8499">budget used</text>
+          <text x="65" y="86" text-anchor="middle" font-size="10" fill="#27ae60">£27 surplus</text>
+        </svg>
+      </div>
+      <div style="font-size:12.5px;color:var(--grey);text-align:center">Revenue target <span style="color:var(--teal)">20% above</span> projected spend as controlled contingency reserve</div>
+      <div style="margin-top:10px;padding:9px;background:rgba(243,156,18,0.08);border-radius:7px;font-size:12px;color:var(--yellow);text-align:center">⚠ Within budget — £27 remaining at nationals</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">SMART KPI Framework — Applied to Every Deliverable</div>
+    <div class="smart-grid">
+      <div class="smart-card"><div class="smart-letter">S</div><div style="font-size:13px;color:var(--white);margin-top:7px;font-weight:600">Specific</div><div style="font-size:11.5px;color:var(--grey);margin-top:5px">Each KPI tied directly to a deliverable or milestone date</div></div>
+      <div class="smart-card"><div class="smart-letter">M</div><div style="font-size:13px;color:var(--white);margin-top:7px;font-weight:600">Measurable</div><div style="font-size:11.5px;color:var(--grey);margin-top:5px">Quantified: ±3 days, 90% completion, £ vs budget</div></div>
+      <div class="smart-card"><div class="smart-letter">A</div><div style="font-size:13px;color:var(--white);margin-top:7px;font-weight:600">Achievable</div><div style="font-size:11.5px;color:var(--grey);margin-top:5px">Set within realistic constraints of school + competition timeline</div></div>
+      <div class="smart-card"><div class="smart-letter">R</div><div style="font-size:13px;color:var(--white);margin-top:7px;font-weight:600">Relevant</div><div style="font-size:11.5px;color:var(--grey);margin-top:5px">Directly supports project scope, quality, and competition goals</div></div>
+      <div class="smart-card"><div class="smart-letter">T</div><div style="font-size:13px;color:var(--white);margin-top:7px;font-weight:600">Time-Bound</div><div style="font-size:11.5px;color:var(--grey);margin-top:5px">Weekly review + key gate milestones: Design Freeze, MFR Sign-off, Submission Lock</div></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<!-- ── EDIT MODE BANNER ── -->
+<div class="edit-banner">✏️ EDIT MODE ACTIVE — Click any text field to edit. Click "Save Changes" or toggle Edit Mode off when done.</div>
+
+<!-- ── ADD TASK MODAL ── -->
+<div class="modal-backdrop" id="taskModal">
+  <div class="modal">
+    <h3>Add Task</h3>
+    <label>Task Title</label>
+    <input type="text" id="tTitle" placeholder="e.g. Final car quality check">
+    <label>Category</label>
+    <select id="tCat">
+      <option value="t-eng">Engineering</option>
+      <option value="t-ent">Enterprise</option>
+      <option value="t-des">Design</option>
+      <option value="t-mfr">Manufacturing</option>
+      <option value="t-pres">Presentation</option>
+    </select>
+    <label>Owner</label>
+    <input type="text" id="tOwner" placeholder="e.g. Aleks">
+    <label>Due Date</label>
+    <input type="text" id="tDate" placeholder="e.g. Mar 22">
+    <label>Column</label>
+    <select id="tCol">
+      <option value="open">Open</option>
+      <option value="progress">In Progress</option>
+      <option value="review">Review</option>
+      <option value="done">Done</option>
+    </select>
+    <label>Priority</label>
+    <select id="tPri">
+      <option value="p-h">High</option>
+      <option value="p-m">Medium</option>
+      <option value="p-l">Low</option>
+    </select>
+    <div class="modal-btns">
+      <button class="btn btn-grey" onclick="closeModal('taskModal')">Cancel</button>
+      <button class="btn btn-teal" onclick="saveTask()">Add Task</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── ADD RISK MODAL ── -->
+<div class="modal-backdrop" id="riskModal">
+  <div class="modal">
+    <h3>Add Risk</h3>
+    <label>Risk ID (e.g. R-10)</label>
+    <input type="text" id="rId" placeholder="R-10">
+    <label>Risk Description</label>
+    <input type="text" id="rDesc" placeholder="e.g. Car battery failure">
+    <label>Threat Level (0–5)</label>
+    <input type="number" id="rLevel" min="0" max="5" step="0.1" placeholder="2.5">
+    <label>Priority</label>
+    <select id="rPri"><option>ESCALATE</option><option>MITIGATE</option><option>MONITOR</option></select>
+    <label>Trigger</label>
+    <input type="text" id="rTrigger" placeholder="What event triggers this risk?">
+    <label>Control Action</label>
+    <input type="text" id="rControl" placeholder="What is the response?">
+    <label>Owner</label>
+    <input type="text" id="rOwner" placeholder="e.g. Team Manager">
+    <label>Status</label>
+    <select id="rStatus"><option value="sc">Controlled</option><option value="sm">Monitored</option><option value="so">Open</option></select>
+    <div class="modal-btns">
+      <button class="btn btn-grey" onclick="closeModal('riskModal')">Cancel</button>
+      <button class="btn btn-teal" onclick="saveRisk()">Add Risk</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── CLOCK ──
+  function tick(){
+    var n=new Date();
+    document.getElementById('clock').textContent=n.toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+  }
+  tick();setInterval(tick,30000);
+
+  // ── PANELS ──
+  function showPanel(name,btn){
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    document.getElementById('panel-'+name).classList.add('active');
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    if(btn)btn.classList.add('active');
+  }
+
+  // ── EDIT MODE ──
+  let editMode=false;
+  function toggleEdit(){
+    editMode=!editMode;
+    document.body.classList.toggle('edit-mode',editMode);
+    const t=document.getElementById('editToggle');
+    t.classList.toggle('active',editMode);
+    document.querySelectorAll('.editable').forEach(el=>{
+      el.contentEditable=editMode?'true':'false';
+    });
+    document.getElementById('addTaskBtn').style.display=editMode?'block':'none';
+    document.getElementById('addRiskBtn').style.display=editMode?'block':'none';
+    document.getElementById('addLogBtn').style.display=editMode?'block':'none';
+    if(editMode){
+      t.textContent='💾 Save Changes';
+    }else{
+      saveState();
+      t.textContent='✓ Saved';
+      setTimeout(function(){if(!editMode)t.textContent='✏️ Edit Mode';},1400);
+    }
+  }
+
+  // ── TASK MODAL ──
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g,function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  let targetCol='open';
+  function openTaskModal(){document.getElementById('taskModal').classList.add('open')}
+  function addTask(col){targetCol=col;openTaskModal()}
+  function closeModal(id){document.getElementById(id).classList.remove('open')}
+  function saveTask(){
+    const title=document.getElementById('tTitle').value.trim();
+    if(!title)return;
+    const cat=document.getElementById('tCat').value;
+    const catNames={'t-eng':'Engineering','t-ent':'Enterprise','t-des':'Design','t-mfr':'Manufacturing','t-pres':'Presentation'};
+    const owner=document.getElementById('tOwner').value.trim()||'TBD';
+    const date=document.getElementById('tDate').value.trim();
+    const col=document.getElementById('tCol').value;
+    const pri=document.getElementById('tPri').value;
+    const card=document.createElement('div');
+    card.className='task-card';
+    card.setAttribute('onclick','editTask(this)');
+    card.innerHTML=`<div class="task-title editable" contenteditable="true">${escapeHtml(title)}</div>
+      <div class="task-meta"><span class="t-tag ${cat}">${catNames[cat]}</span>
+      <span class="t-owner editable" contenteditable="true">${escapeHtml(owner)}</span>
+      ${date?`<span class="t-date editable" contenteditable="true">${escapeHtml(date)}</span>`:''}
+      <div class="t-pri ${pri}"></div></div>`;
+    const colEl=document.getElementById('col-'+col);
+    const addBtn=colEl.querySelector('.add-task');
+    colEl.insertBefore(card,addBtn);
+    updateCounts();
+    closeModal('taskModal');
+    ['tTitle','tOwner','tDate'].forEach(id=>document.getElementById(id).value='');
+  }
+  function editTask(card){
+    if(!editMode)return;
+    const title=card.querySelector('.task-title');
+    if(title)title.focus();
+  }
+  function updateCounts(){
+    ['open','progress','review','done'].forEach(c=>{
+      const col=document.getElementById('col-'+c);
+      const count=col.querySelectorAll('.task-card').length;
+      document.getElementById('cnt-'+c).textContent=count;
+    });
+  }
+
+  // ── RISK MODAL ──
+  function openRiskModal(){document.getElementById('riskModal').classList.add('open')}
+  function saveRisk(){
+    const id=document.getElementById('rId').value.trim();
+    const desc=document.getElementById('rDesc').value.trim();
+    if(!id||!desc)return;
+    const level=parseFloat(document.getElementById('rLevel').value)||1.0;
+    const pri=document.getElementById('rPri').value;
+    const trigger=document.getElementById('rTrigger').value.trim();
+    const control=document.getElementById('rControl').value.trim();
+    const owner=document.getElementById('rOwner').value.trim();
+    const status=document.getElementById('rStatus').value;
+    const pillClass=level>=3.1?'rh':level>=1.3?'rm':'rl';
+    const pillLabel=level>=3.1?`${level} HIGH`:level>=1.3?`${level} MED`:`${level} LOW`;
+    const priColor=level>=3.1?'var(--red)':level>=1.3?'var(--yellow)':'var(--grey)';
+    const priLabel=level>=3.1?'ESCALATE':level>=1.3?'MITIGATE':'MONITOR';
+    const statusLabel={'sc':'Controlled','sm':'Monitored','so':'Open'}[status];
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td style="font-family:var(--mono);color:var(--teal);font-size:12px" class="editable" contenteditable="true">${escapeHtml(id)}</td>
+      <td class="editable" contenteditable="true" style="font-weight:500">${escapeHtml(desc)}</td>
+      <td><span class="rpill ${pillClass}">${pillLabel}</span></td>
+      <td style="color:${priColor};font-size:12px;font-weight:700">${priLabel}</td>
+      <td class="desc editable" contenteditable="true">${escapeHtml(trigger)}</td>
+      <td class="desc editable" contenteditable="true">${escapeHtml(control)}</td>
+      <td class="owner editable" contenteditable="true">${escapeHtml(owner)}</td>
+      <td><span class="spill s${status.charAt(1)}">${statusLabel}</span></td>`;
+    document.getElementById('riskTable').appendChild(tr);
+    closeModal('riskModal');
+    ['rId','rDesc','rLevel','rTrigger','rControl','rOwner'].forEach(id=>document.getElementById(id).value='');
+  }
+
+  // ── LOG ENTRY ──
+  function addLogEntry(){
+    const today=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+    const entry=document.createElement('div');
+    entry.className='log-entry';
+    entry.innerHTML=`<div class="log-date editable" contenteditable="true">${today}</div><div class="log-text editable" contenteditable="true">New activity — click to edit</div>`;
+    const log=document.getElementById('logEntries');
+    log.insertBefore(entry,log.firstChild);
+    entry.querySelector('.log-text').focus();
+  }
+
+  // ── PERSISTENCE (localStorage) ──
+  // "Save Changes" writes the editable/added content to localStorage so it
+  // survives a refresh. The committed HTML stays the source of truth: a fresh
+  // browser with no saved state shows the original dashboard, and any storage
+  // or parse error falls back to that default — never a blank or broken view.
+  const EMC_KEY='emc-dashboard-v1';
+  const EMC_PANELS=['panel-overview','panel-tasks','panel-risks','panel-budget','panel-schedule','panel-kpis'];
+  function saveState(){
+    try{
+      const data={};
+      EMC_PANELS.forEach(function(id){var el=document.getElementById(id);if(el)data[id]=el.innerHTML;});
+      localStorage.setItem(EMC_KEY,JSON.stringify({v:1,panels:data}));
+    }catch(e){/* storage unavailable/full: keep in-memory edits, no persistence */}
+  }
+  function restoreState(){
+    try{
+      var raw=localStorage.getItem(EMC_KEY);
+      if(!raw)return;
+      var saved=JSON.parse(raw);
+      if(!saved||saved.v!==1||!saved.panels)return;
+      EMC_PANELS.forEach(function(id){
+        var el=document.getElementById(id);
+        if(el&&typeof saved.panels[id]==='string')el.innerHTML=saved.panels[id];
+      });
+    }catch(e){try{localStorage.removeItem(EMC_KEY);}catch(_){}}
+  }
+
+  // ── INIT ──
+  // Restore any saved edits (falls back to committed defaults), then derive
+  // task-column counts from the actually-rendered cards so headers stay correct.
+  restoreState();
+  updateCounts();
+</script>
+</body>
+</html>
