@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  # Nothing here is built, so nothing here is compiled or linted. Each app is a
+  # single hand-written index.html with its whole program inlined, and a stray
+  # brace leaves a page that loads, renders, and does nothing. This is the only
+  # thing standing between that and a commit.
+  pages:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      # node is what checks the inline script syntax; check_pages.py fails
+      # rather than skipping if it is missing, so this step is load-bearing.
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - run: python tools/check_pages.py
+
+  # The gitleaks binary directly rather than gitleaks-action, and the whole
+  # history rather than a diff. The action scans only the range
+  # <before>^..<after> that a push touched, so a secret committed earlier and
+  # never edited again is never looked at; and on a repository's first push the
+  # parent of the root commit does not exist, so it fails outright.
+  gitleaks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GITLEAKS_VERSION: "8.30.1"
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Install gitleaks
+        run: |
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            | sudo tar -xz -C /usr/local/bin gitleaks
+          gitleaks version
+      - run: gitleaks detect --source . --redact --exit-code 1 --log-opts=--all

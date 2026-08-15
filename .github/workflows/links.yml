@@ -1,0 +1,25 @@
+name: Outbound links
+
+# Deliberately not on push. The website links to thirteen sponsors, partners and
+# the competition organisers; whether their servers are up says nothing about
+# the commit being pushed, and a red build must mean something is wrong here.
+# Weekly instead, so a sponsor's site going dark is noticed within a week rather
+# than by a visitor.
+on:
+  schedule:
+    - cron: "23 7 * * 1"
+  workflow_dispatch:
+
+jobs:
+  links:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - run: python tools/check_pages.py --links
