@@ -110,6 +110,20 @@ class Structure(HTMLParser):
             self._script_line = None
 
 
+# `node --check` parses the file as a CommonJS module, which wraps the body in a
+# function: a stray top-level `return`, and a top-level `await`, both pass there
+# and both stop a browser parsing the page at all. These bodies are inline
+# <script> content, so compile them the way a browser does -- vm.Script, script
+# goal, sloppy mode. Reporting e.message rather than letting node throw also
+# keeps the failure readable: an uncaught SyntaxError ends its stderr with the
+# node version banner, and that banner is what used to get quoted back.
+CHECK_JS = (
+    "const fs=require('fs'),vm=require('vm');"
+    "try{new vm.Script(fs.readFileSync(process.argv[1],'utf8'),{filename:process.argv[1]});}"
+    "catch(e){console.error(String((e&&e.message)||e));process.exit(1);}"
+)
+
+
 def node_available() -> bool:
     try:
         subprocess.run(["node", "--version"], capture_output=True, check=True)
@@ -131,7 +145,7 @@ def check_script_syntax(app: str, scripts: list[tuple[int, str]], have_node: boo
             fh.write(body)
             path = fh.name
         result = subprocess.run(
-            ["node", "--check", path], capture_output=True, text=True, encoding="utf-8",
+            ["node", "-e", CHECK_JS, path], capture_output=True, text=True, encoding="utf-8",
             errors="replace",
         )
         Path(path).unlink(missing_ok=True)
