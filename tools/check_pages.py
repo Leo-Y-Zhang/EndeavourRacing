@@ -180,8 +180,19 @@ def check_external_links(by_app: dict[str, set[str]]) -> None:
             code = exc.code
         except Exception as exc:  # noqa: BLE001 -- network shapes vary wildly
             code = f"unreachable ({type(exc).__name__})"
-        # 403 and 405 are bot-blocking, not a dead page.
-        ok = str(code).startswith("2") or code in (403, 405)
+        # 403 and 405 are bot-blocking, not a dead page. 429 is the same thing
+        # said differently: "too many requests" is the host rate-limiting this
+        # runner's shared IP, which is evidence about GitHub's egress and about
+        # how many other people are hitting that host, and none at all about
+        # whether the sponsor's site is up.
+        #
+        # MEASURED 2026-08-24: the weekly run went red solely because Instagram
+        # returned 429 for both endeavour.racing links, while every other link
+        # passed and the same two had been green the week before. A check that
+        # flaps on somebody else's rate limiter trains you to ignore it, and an
+        # ignored red build is worse than no build -- this one guards thirteen
+        # sponsor links and needs to mean something when it fires.
+        ok = str(code).startswith("2") or code in (403, 405, 429)
         print(f"  [{'PASS' if ok else 'FAIL'}] {code}  {url}")
         if not ok:
             dead.append(f"{url} -> {code}")
