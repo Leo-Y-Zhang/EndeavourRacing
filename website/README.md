@@ -1,6 +1,6 @@
 # Endeavour Racing — Team Website
 
-Official website for Endeavour Racing, a six-student team from Harrow School competing in the **STEM Racing Nationals 2026** (Development Class).
+Official website for Endeavour Racing, a six-student school team competing in the **STEM Racing Nationals 2026** (Development Class).
 
 ## Competition Results
 
@@ -31,7 +31,7 @@ Or double-click `index.html` in your file explorer.
 - **About** — who we are and what we compete in
 - **Results** — all five awards and nominations with context
 - **Story** — the reasoning behind the Endeavour name
-- **Team** — individual profiles for each of the six members
+- **Team** — the six roles on the team and what each one covers
 - **Sponsors** — partner logos and a sponsorship enquiry form
 - **Contact** — front-end contact form (demo) plus a direct mailto link
 

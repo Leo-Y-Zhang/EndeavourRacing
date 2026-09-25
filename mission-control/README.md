@@ -1,6 +1,6 @@
 # Mission Control — Endeavour Racing
 
-Project management dashboard for Endeavour Racing, a six-student team from Harrow School competing in the STEM Racing Nationals 2026 (Development Class).
+Project management dashboard for Endeavour Racing, a six-student school team competing in the STEM Racing Nationals 2026 (Development Class).
 
 ## Features
 
