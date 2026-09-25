@@ -34,14 +34,15 @@ is blocked or offline; nothing else is fetched, and no page has a backend.
 Nothing here is compiled, so a stray brace in an inline script leaves a page that loads, renders
 its markup, and does nothing at all. `tools/check_pages.py` is the only thing standing between
 that and a commit: it checks tag balance, compiles every inline script the way a browser does
-rather than the way `node --check` does, and confirms that in-page anchors and local file
+rather than the way `node --check` does, compiles every inline event handler (`onclick="..."`)
+the way a browser compiles an attribute, and confirms that in-page anchors and local file
 references resolve.
 
 ```bash
 python tools/check_pages.py
 ```
 
-Thirteen checks, about a second, and it is the whole test suite. It needs Python 3.9 or newer
+Sixteen checks, about a second, and it is the whole test suite. It needs Python 3.9 or newer
 (standard library only, no `pip install`) and Node on `PATH` -- Node is what parses the inline
 scripts, and the run fails rather than skips when it is missing. CI pins Python 3.13 and Node 22.
 
