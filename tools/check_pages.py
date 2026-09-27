@@ -57,10 +57,14 @@ class Structure(HTMLParser):
         self.preconnect: list[str] = []
         self.local_assets: list[tuple[str, int]] = []
         self.scripts: list[tuple[int, str]] = []
+        self.handlers: list[tuple[int, str, str]] = []
         self._script_line: int | None = None
 
     def handle_starttag(self, tag, attrs):
         a = dict(attrs)
+        for name, value in attrs:
+            if name.startswith("on") and value:
+                self.handlers.append((self.getpos()[0], name, value))
         if a.get("id"):
             self.ids.add(a["id"])
         href = a.get("href") or ""
@@ -156,6 +160,42 @@ def check_script_syntax(app: str, scripts: list[tuple[int, str]], have_node: boo
             bad.append(f"script at line {line}: {first[-1] if first else 'syntax error'}")
     check(f"{app}: every inline script parses as JavaScript", not bad,
           f"{len(scripts)} script block(s)" + ("" if not bad else "; " + "; ".join(bad[:3])))
+
+
+# An on* attribute is script too, and the <script> check above never sees it.
+# A browser compiles the attribute value as the body of a sloppy-mode function
+# taking `event`, and only when that event first fires: a syntax error there
+# does not stop the page loading, it silently kills that one button, which is
+# exactly what nobody notices until they click it. new Function('event', body)
+# is that compilation. All of a page's handlers go to one node process.
+CHECK_HANDLERS = (
+    "const fs=require('fs');let bad=0;"
+    "for(const [line,name,body] of JSON.parse(fs.readFileSync(process.argv[1],'utf8'))){"
+    "try{new Function('event',body);}"
+    "catch(e){bad=1;console.log(`${name} at line ${line}: ${String((e&&e.message)||e)}`);}}"
+    "process.exit(bad);"
+)
+
+
+def check_handler_syntax(app: str, handlers: list[tuple[int, str, str]], have_node: bool) -> None:
+    if not have_node:
+        # check_script_syntax has already failed the run for the missing node.
+        print(f"  [SKIP] {app}: node not on PATH, inline event handlers not checked")
+        return
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as fh:
+        json.dump(handlers, fh)
+        path = fh.name
+    result = subprocess.run(
+        ["node", "-e", CHECK_HANDLERS, path], capture_output=True, text=True, encoding="utf-8",
+        errors="replace",
+    )
+    Path(path).unlink(missing_ok=True)
+    bad = (result.stdout or "").strip().splitlines()
+    if result.returncode != 0 and not bad:
+        tail = (result.stderr or "").strip().splitlines()
+        bad = [tail[-1] if tail else "node failed"]
+    check(f"{app}: every inline event handler parses as JavaScript", not bad,
+          f"{len(handlers)} handler(s)" + ("" if not bad else "; " + "; ".join(bad[:3])))
 
 
 LINK_OK = "ok"
@@ -310,6 +350,7 @@ def main() -> int:
               (f"unclosed: {[t for t, _ in parser.stack][:3]}" if parser.stack else ""))
 
         check_script_syntax(app, parser.scripts, have_node)
+        check_handler_syntax(app, parser.handlers, have_node)
 
         missing = sorted({a for a, _ in parser.anchors if a and a not in parser.ids})
         check(f"{app}: every in-page link has a target", not missing,
