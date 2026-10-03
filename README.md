@@ -1,5 +1,7 @@
 # Endeavour Racing
 
+**Live:** [Team website](https://leo-y-zhang.github.io/EndeavourRacing/website/) · [Precision Lap game](https://leo-y-zhang.github.io/EndeavourRacing/precision-lap/) · [Mission Control dashboard](https://leo-y-zhang.github.io/EndeavourRacing/mission-control/)
+
 Combined home for the Endeavour Racing team: the marketing **website**, the **Precision Lap**
 setup-and-guess game, and the **Mission Control** dashboard. Imported from three separate
 repositories as one squashed commit; the root commit message records why the original histories
