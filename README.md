@@ -28,8 +28,9 @@ start website/index.html       # Windows, or double-click it, or run website\sta
 ```
 
 The same three commands work for `precision-lap/index.html` and `mission-control/index.html`.
-Each page pulls its display typefaces from Google Fonts and falls back to system fonts when that
-is blocked or offline; nothing else is fetched, and no page has a backend.
+Each page loads its typefaces from the `fonts/` folder beside it (SIL Open Font License copies,
+licences included) and falls back to system fonts if that folder is missing; nothing is fetched
+from a third party, and no page has a backend.
 
 ## Checking them
 
