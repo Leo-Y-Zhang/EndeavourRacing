@@ -10,14 +10,14 @@
 /* ═══════════════ VARIABLES ═══════════════ */
 :root {
   --brand:   #1f9e6e;
-  --bright:  #00e896;
-  --void:    #040a06;
-  --panel:   #071210;
-  --border:  #0f2a1c;
-  --dim:     #183424;
-  --mid:     #245038;
-  --white:   #edf7f1;
-  --muted:   #4a8068;
+  --bright:  #3ccf91;
+  --void:    #0d1012;
+  --panel:   #161a1d;
+  --border:  #283036;
+  --dim:     #313a41;
+  --mid:     #45515a;
+  --white:   #f1f4f2;
+  --muted:   #93a1a9;
   --amber:   #ffb300;
   --red:     #ff2d44;
   --blue:    #4da6ff;
@@ -37,18 +37,16 @@ html, body {
 /* ═══════════════ GLOBAL GRID ═══════════════ */
 body::before {
   content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  background-image:
-    linear-gradient(rgba(0,232,150,.055) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,232,150,.055) 1px, transparent 1px);
-  background-size: 48px 48px;
+  background: linear-gradient(180deg, rgba(255,255,255,.025), transparent 40%);
 }
 
 /* ═══════════════ SCANLINE ═══════════════ */
 .scanline {
+  display: none;
   position: fixed; inset: 0; z-index: 999; pointer-events: none;
   background:
-    radial-gradient(circle at 0% 0%,   rgba(0,232,150,.18) 0%, transparent 40%),
-    radial-gradient(circle at 100% 100%, rgba(0,232,150,.10) 0%, transparent 40%);
+    radial-gradient(circle at 0% 0%,   rgba(60,207,145,.18) 0%, transparent 40%),
+    radial-gradient(circle at 100% 100%, rgba(60,207,145,.10) 0%, transparent 40%);
   animation: corner-pulse 4s ease-in-out infinite;
 }
 @keyframes corner-pulse {
@@ -91,7 +89,7 @@ body::before {
 .logo-text {
   font-family: 'Bebas Neue', sans-serif;
   font-size: clamp(.85rem,1.6vw,1.1rem);
-  letter-spacing: 4px; white-space: nowrap; flex-shrink: 0;
+  letter-spacing: 1.5px; white-space: nowrap; flex-shrink: 0;
   color: var(--muted);
 }
 .logo-text em { color: var(--brand); font-style: normal; }
@@ -101,13 +99,13 @@ body::before {
 .page-title-main {
   font-family: 'Bebas Neue', sans-serif;
   font-size: clamp(1.3rem,3vw,2.2rem);
-  letter-spacing: 5px; line-height: 1;
+  letter-spacing: 2px; line-height: 1;
   color: var(--white); white-space: nowrap;
 }
 .page-title-sub {
   font-family: 'Space Mono', monospace;
   font-size: clamp(.4rem,.75vw,.54rem);
-  letter-spacing: 2px; color: var(--muted);
+  letter-spacing: .5px; color: var(--muted);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .page-header-right {
@@ -116,7 +114,7 @@ body::before {
 .logo-badge {
   font-family: 'Space Mono', monospace;
   font-size: clamp(.4rem,.72vw,.54rem);
-  letter-spacing: 3px; color: var(--muted);
+  letter-spacing: 1px; color: var(--muted);
   border: 1px solid var(--border); border-radius: 2px;
   padding: 4px 10px; white-space: nowrap;
 }
@@ -136,7 +134,7 @@ body::before {
 .prog-label {
   font-family: 'Space Mono', monospace;
   font-size: clamp(.55rem,.9vw,.7rem);
-  letter-spacing: 3px; color: var(--muted); text-align: center;
+  letter-spacing: 1px; color: var(--muted); text-align: center;
   flex-shrink: 0; margin-bottom: clamp(6px,1vh,10px);
 }
 
@@ -149,12 +147,12 @@ body::before {
 }
 .ctx-track {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(1.2rem,3.2vw,2rem); letter-spacing: 3px;
+  font-size: clamp(1.2rem,3.2vw,2rem); letter-spacing: 1px;
 }
 .ctx-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .w-badge {
   font-family: 'Space Mono', monospace;
-  font-size: clamp(.5rem,.9vw,.66rem); letter-spacing: 2px;
+  font-size: clamp(.5rem,.9vw,.66rem); letter-spacing: .5px;
   padding: 5px 14px; border-radius: 20px; border: 1px solid; white-space: nowrap;
 }
 .w-dry   { border-color: var(--bright); color: var(--bright); background: rgba(47,186,136,.08); }
@@ -169,7 +167,7 @@ body::before {
 /* ═══════════════ BUTTONS ═══════════════ */
 .btn {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(1rem,2.2vw,1.3rem); letter-spacing: 3px;
+  font-size: clamp(1rem,2.2vw,1.3rem); letter-spacing: 1px;
   padding: clamp(13px,2vh,18px) clamp(28px,5vw,52px);
   border: 2px solid var(--brand); background: transparent; color: var(--brand);
   cursor: pointer; border-radius: 3px;
@@ -181,13 +179,13 @@ body::before {
   background: var(--brand); transform: scaleX(0);
   transform-origin: left; transition: transform .18s ease;
 }
-.btn:hover { color: var(--void); box-shadow: 0 0 32px rgba(0,232,150,.6); }
+.btn:hover { color: var(--void); box-shadow: 0 0 32px rgba(60,207,145,.6); }
 .btn:hover::before { transform: scaleX(1); }
 .btn:active { transform: scale(.97); }
 
 .btn-go  { border-color: var(--bright); color: var(--bright); }
 .btn-go::before { background: var(--bright); }
-.btn-go:hover { box-shadow: 0 0 36px rgba(0,232,150,.7); }
+.btn-go:hover { box-shadow: 0 0 36px rgba(60,207,145,.7); }
 
 .btn-back { border-color: var(--dim); color: var(--muted); }
 .btn-back::before { background: var(--dim); }
@@ -205,7 +203,7 @@ body::before {
 }
 .card-lbl {
   font-family: 'Space Mono', monospace;
-  font-size: clamp(.52rem,.85vw,.65rem); letter-spacing: 3px;
+  font-size: clamp(.52rem,.85vw,.65rem); letter-spacing: 1px;
   color: var(--muted); margin-bottom: 8px;
 }
 
@@ -226,12 +224,12 @@ body::before {
 #intro {
   justify-content: center; align-items: center;
   gap: clamp(12px,2.5vh,24px);
-  background: radial-gradient(ellipse 80% 60% at 50% 55%, rgba(0,232,150,.18) 0%, transparent 65%);
+  background: radial-gradient(ellipse 80% 60% at 50% 55%, rgba(60,207,145,.18) 0%, transparent 65%);
 }
 .intro-strap {
   font-family: 'Space Mono', monospace;
   font-size: clamp(.55rem,1.1vw,.74rem);
-  letter-spacing: 5px; color: var(--brand); text-align: center;
+  letter-spacing: 2px; color: var(--brand); text-align: center;
 }
 .brand-e {
   font-family: 'Bebas Neue', sans-serif;
@@ -245,7 +243,7 @@ body::before {
 .brand-r {
   font-family: 'Bebas Neue', sans-serif;
   font-size: clamp(1.4rem,5vw,3rem);
-  letter-spacing: clamp(12px,3.5vw,28px); color: var(--brand); text-align: center;
+  letter-spacing: clamp(4px,1.2vw,10px); color: var(--brand); text-align: center;
   animation: brand-in .9s .15s cubic-bezier(.34,1.56,.64,1) both;
 }
 .divider {
@@ -254,15 +252,14 @@ body::before {
 }
 .intro-copy {
   font-family: 'Space Mono', monospace;
-  font-size: clamp(.58rem,1.2vw,.78rem); letter-spacing: 2px;
+  font-size: clamp(.58rem,1.2vw,.78rem); letter-spacing: .5px;
   color: var(--muted); text-align: center; line-height: 2.4;
 }
 .intro-tagline {
   font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
   font-size: clamp(1.2rem,3vw,1.9rem);
-  letter-spacing: 6px; text-align: center;
-  color: transparent;
-  -webkit-text-stroke: 1px rgba(47,186,136,.35);
+  letter-spacing: 2px; text-align: center;
+  color: var(--bright);
 }
 .star-field {
   position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none;
@@ -284,14 +281,14 @@ body::before {
   font-family: 'Bebas Neue', sans-serif;
   font-size: clamp(4rem,15vw,9rem);
   letter-spacing: clamp(14px,4vw,30px); color: var(--brand); text-align: center;
-  text-shadow: 0 0 70px rgba(0,232,150,.5);
+  text-shadow: none;
   transition: color .2s;
 }
 .init-field {
   font-size: clamp(1.6rem,4.5vw,2.4rem);
   padding: clamp(10px,1.5vh,14px) 20px; max-width: 220px; text-transform: uppercase;
 }
-.init-field::placeholder { letter-spacing: 2px; font-size: clamp(.85rem,2vw,1.1rem); color: var(--muted); }
+.init-field::placeholder { letter-spacing: .5px; font-size: clamp(.85rem,2vw,1.1rem); color: var(--muted); }
 .init-field:not(:placeholder-shown) { letter-spacing: 12px; }
 .teams-grid {
   display: flex; gap: clamp(6px,1.2vw,10px); flex-wrap: wrap; justify-content: center;
@@ -302,14 +299,14 @@ body::before {
   background: var(--panel); cursor: pointer;
   display: flex; align-items: center; gap: 8px;
   font-family: 'Space Mono', monospace;
-  font-size: clamp(.56rem,1vw,.72rem); letter-spacing: 2px; color: var(--muted);
+  font-size: clamp(.56rem,1vw,.72rem); letter-spacing: .5px; color: var(--muted);
   transition: all .2s;
 }
 .team-btn.sel { border-color: var(--white); color: var(--white); transform: scale(1.06); }
 .team-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
 .sec-lbl {
   font-family: 'Space Mono', monospace;
-  font-size: clamp(.55rem,.88vw,.68rem); letter-spacing: 4px; color: var(--muted); text-align: center;
+  font-size: clamp(.55rem,.88vw,.68rem); letter-spacing: 1.5px; color: var(--muted); text-align: center;
 }
 
 /* ══════════════════════════════════════════
@@ -325,7 +322,7 @@ body::before {
 @keyframes reveal-in { from { opacity:0; transform:scale(.75); } }
 .reveal-country {
   font-family: 'Space Mono', monospace;
-  font-size: clamp(.6rem,1.1vw,.76rem); letter-spacing: 3px;
+  font-size: clamp(.6rem,1.1vw,.76rem); letter-spacing: 1px;
   color: var(--muted); text-align: center;
 }
 .reveal-map {
@@ -343,7 +340,7 @@ body::before {
 }
 .rstat-lbl {
   font-family: 'Space Mono', monospace;
-  font-size: clamp(.52rem,.82vw,.62rem); letter-spacing: 3px; color: var(--muted); margin-top: 3px;
+  font-size: clamp(.52rem,.82vw,.62rem); letter-spacing: 1px; color: var(--muted); margin-top: 3px;
 }
 .tip-card {
   max-width: 520px; text-align: center;
@@ -362,12 +359,12 @@ body::before {
 }
 .step-num {
   font-family: 'Space Mono', monospace;
-  font-size: clamp(.55rem,.88vw,.7rem); letter-spacing: 4px;
+  font-size: clamp(.55rem,.88vw,.7rem); letter-spacing: 1.5px;
   color: var(--brand); margin-bottom: 4px;
 }
 .step-title {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(2.5rem,8vw,5.5rem); letter-spacing: 5px;
+  font-size: clamp(2.5rem,8vw,5.5rem); letter-spacing: 2px;
   line-height: 1;
 }
 
@@ -403,7 +400,7 @@ body::before {
 .tyre-item.sel .tyre-circle::after { border-color: rgba(255,255,255,.3); }
 .tyre-label {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(1rem,2.2vw,1.35rem); letter-spacing: 2px;
+  font-size: clamp(1rem,2.2vw,1.35rem); letter-spacing: .5px;
   color: var(--muted); transition: color .22s;
 }
 .tyre-item.sel .tyre-label { color: var(--white); }
@@ -460,7 +457,7 @@ body::before {
 }
 .fuel-tag {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(1.3rem,2.8vw,1.9rem); letter-spacing: 3px; color: var(--muted);
+  font-size: clamp(1.3rem,2.8vw,1.9rem); letter-spacing: 1px; color: var(--muted);
   transition: color .2s;
 }
 .fuel-item.sel .fuel-tag { color: var(--amber); }
@@ -500,16 +497,16 @@ body::before {
   box-shadow: 0 0 30px rgba(47,186,136,.35);
   animation: pulse-on 2s ease-in-out infinite;
 }
-@keyframes pulse-on { 0%,100%{box-shadow:0 0 20px rgba(0,232,150,.4)} 50%{box-shadow:0 0 55px rgba(0,232,150,.85)} }
+@keyframes pulse-on { 0%,100%{box-shadow:0 0 20px rgba(60,207,145,.4)} 50%{box-shadow:0 0 55px rgba(60,207,145,.85)} }
 .sys-name {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(2.4rem,7vw,4.4rem); letter-spacing: 5px;
+  font-size: clamp(2.4rem,7vw,4.4rem); letter-spacing: 2px;
   transition: color .25s;
 }
 .sys-toggle-card.on .sys-name { color: var(--bright); }
 .sys-state {
   font-family: 'Space Mono', monospace;
-  font-size: clamp(.6rem,1.1vw,.78rem); letter-spacing: 4px;
+  font-size: clamp(.6rem,1.1vw,.78rem); letter-spacing: 1.5px;
   color: var(--muted); transition: color .25s;
 }
 .sys-toggle-card.on .sys-state { color: var(--bright); }
@@ -576,7 +573,7 @@ body::before {
 .drs-toggle-card.on .sys-effect { color: rgba(96,165,250,.55); }
 .drs-zone-tag {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(.75rem,1.7vw,1rem); letter-spacing: 2px;
+  font-size: clamp(.75rem,1.7vw,1rem); letter-spacing: .5px;
   color: var(--muted); margin-top: -8px; transition: color .25s;
 }
 .drs-toggle-card.on .drs-zone-tag { color: #60a5fa; }
@@ -597,11 +594,11 @@ body::before {
 }
 .psbox-lbl {
   font-family: 'Space Mono', monospace;
-  font-size: clamp(.52rem,.82vw,.65rem); letter-spacing: 3px; color: var(--muted); margin-bottom: 5px;
+  font-size: clamp(.52rem,.82vw,.65rem); letter-spacing: 1px; color: var(--muted); margin-bottom: 5px;
 }
 .psbox-val {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(1.1rem,2.4vw,1.6rem); letter-spacing: 2px;
+  font-size: clamp(1.1rem,2.4vw,1.6rem); letter-spacing: .5px;
 }
 .predict-center {
   flex: 1; display: flex; flex-direction: column;
@@ -610,24 +607,24 @@ body::before {
 }
 .predict-subtitle {
   font-family: 'Space Mono', monospace;
-  font-size: clamp(.6rem,1.1vw,.78rem); letter-spacing: 4px; color: var(--muted); text-align: center;
+  font-size: clamp(.6rem,1.1vw,.78rem); letter-spacing: 1.5px; color: var(--muted); text-align: center;
 }
 .predict-big {
-  font-size: clamp(3rem,10vw,6rem); font-weight: 700; letter-spacing: 8px;
+  font-size: clamp(3rem,10vw,6rem); font-weight: 700; letter-spacing: 3px;
   padding: clamp(14px,2.5vh,24px) 32px;
   width: min(90%, 420px); border-radius: 6px;
 }
 .predict-big::placeholder {
   font-size: clamp(1rem,2.2vw,1.4rem);
-  letter-spacing: 3px; color: var(--muted); font-weight: 400;
+  letter-spacing: 1px; color: var(--muted); font-weight: 400;
 }
 .predict-big:not(:placeholder-shown) {
   font-size: clamp(3rem,10vw,6rem);
-  letter-spacing: 8px; font-weight: 700;
+  letter-spacing: 3px; font-weight: 700;
 }
 .predict-unit {
   font-family: 'Space Mono', monospace;
-  font-size: clamp(.58rem,1vw,.74rem); letter-spacing: 5px; color: var(--muted);
+  font-size: clamp(.58rem,1vw,.74rem); letter-spacing: 2px; color: var(--muted);
 }
 .predict-hint {
   font-family: 'Space Mono', monospace;
@@ -644,12 +641,12 @@ body::before {
 .cd-num {
   font-family: 'Bebas Neue', sans-serif;
   font-size: clamp(22vw,44vh,38vw); line-height: 1;
-  color: var(--bright); text-shadow: 0 0 120px rgba(0,232,150,.75);
+  color: var(--bright); text-shadow: none;
   transition: color .2s;
 }
 .cd-lbl {
   font-family: 'Space Mono', monospace;
-  font-size: clamp(.65rem,1.3vw,.85rem); letter-spacing: 6px; color: var(--muted);
+  font-size: clamp(.65rem,1.3vw,.85rem); letter-spacing: 2px; color: var(--muted);
 }
 .cd-flash {
   position: fixed; inset: 0; background: var(--bright); opacity: 0; z-index: 500; pointer-events: none;
@@ -663,13 +660,13 @@ body::before {
 #result { gap: clamp(8px,1.4vh,14px); justify-content: center; }
 .medal {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(3.5rem,10vw,6rem); text-align: center; letter-spacing: 4px;
+  font-size: clamp(3.5rem,10vw,6rem); text-align: center; letter-spacing: 1.5px;
   animation: medal-pop .65s cubic-bezier(.34,1.56,.64,1) both;
 }
 @keyframes medal-pop { from { opacity:0; transform:scale(0) rotate(-20deg); } }
 .grade-line {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(1.8rem,5.5vw,3.5rem); letter-spacing: 5px; text-align: center;
+  font-size: clamp(1.8rem,5.5vw,3.5rem); letter-spacing: 2px; text-align: center;
 }
 .times-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; flex-shrink: 0; }
 .t-box {
@@ -677,15 +674,15 @@ body::before {
   padding: clamp(10px,1.5vh,15px);
   background: var(--panel); border: 1px solid var(--border); border-radius: 5px;
 }
-.t-lbl { font-family: 'Space Mono', monospace; font-size: clamp(.52rem,.82vw,.65rem); letter-spacing: 3px; color: var(--muted); margin-bottom: 5px; }
+.t-lbl { font-family: 'Space Mono', monospace; font-size: clamp(.52rem,.82vw,.65rem); letter-spacing: 1px; color: var(--muted); margin-bottom: 5px; }
 .t-val { font-family: 'Space Mono', monospace; font-size: clamp(.9rem,2.3vw,1.45rem); font-weight: 700; }
 .delta-card { flex-shrink: 0; }
 .delta-track { height: 9px; background: var(--dim); border-radius: 5px; overflow: hidden; margin-bottom: 8px; }
 .delta-fill { height: 100%; border-radius: 5px; width: 0; transition: width 1.2s cubic-bezier(.25,.46,.45,.94); }
-.delta-lbl { font-family: 'Space Mono', monospace; font-size: clamp(.6rem,1vw,.76rem); text-align: center; letter-spacing: 2px; }
+.delta-lbl { font-family: 'Space Mono', monospace; font-size: clamp(.6rem,1vw,.76rem); text-align: center; letter-spacing: .5px; }
 .pts-line {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(2.5rem,7vw,4.5rem); text-align: center; letter-spacing: 4px;
+  font-size: clamp(2.5rem,7vw,4.5rem); text-align: center; letter-spacing: 1.5px;
 }
 .breakdown {
   font-family: 'Space Mono', monospace;
@@ -709,21 +706,21 @@ body::before {
 .lb-pos { font-family: 'Bebas Neue', sans-serif; font-size: clamp(1.1rem,2.5vw,1.5rem); width: 28px; text-align: center; color: var(--muted); flex-shrink: 0; }
 .lb-pos.g { color: #ffd700; } .lb-pos.s { color: #c0c0c0; } .lb-pos.b { color: #cd7f32; }
 .lb-info { flex: 1; min-width: 0; }
-.lb-init { font-family: 'Bebas Neue', sans-serif; font-size: clamp(1rem,2.4vw,1.4rem); letter-spacing: 3px; }
+.lb-init { font-family: 'Bebas Neue', sans-serif; font-size: clamp(1rem,2.4vw,1.4rem); letter-spacing: 1px; }
 .lb-meta { font-family: 'Space Mono', monospace; font-size: clamp(.5rem,.8vw,.6rem); color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.lb-pts { font-family: 'Bebas Neue', sans-serif; font-size: clamp(.95rem,2.3vw,1.35rem); color: var(--brand); letter-spacing: 2px; flex-shrink: 0; }
-.lb-empty { font-family: 'Space Mono', monospace; font-size: .58rem; color: var(--muted); text-align: center; padding: 60px 0; letter-spacing: 4px; }
+.lb-pts { font-family: 'Bebas Neue', sans-serif; font-size: clamp(.95rem,2.3vw,1.35rem); color: var(--brand); letter-spacing: .5px; flex-shrink: 0; }
+.lb-empty { font-family: 'Space Mono', monospace; font-size: .58rem; color: var(--muted); text-align: center; padding: 60px 0; letter-spacing: 1.5px; }
 
 /* ════ SESSION LAP TABLE ════ */
 .session-tbl-wrap { flex-shrink: 0; margin-top: 6px; }
-.session-tbl-hdr { font-family: 'Space Mono', monospace; font-size: clamp(.44rem,.7vw,.55rem); letter-spacing: 3px; color: var(--muted); text-transform: uppercase; text-align: center; margin-bottom: 6px; }
+.session-tbl-hdr { font-family: 'Space Mono', monospace; font-size: clamp(.44rem,.7vw,.55rem); letter-spacing: 1px; color: var(--muted); text-transform: uppercase; text-align: center; margin-bottom: 6px; }
 .session-tbl { width: 100%; border-collapse: collapse; }
-.session-tbl th { font-family: 'Space Mono', monospace; font-size: clamp(.42rem,.65vw,.5rem); letter-spacing: 2px; color: var(--muted); text-transform: uppercase; padding: 4px 8px; border-bottom: 1px solid var(--border); text-align: center; }
+.session-tbl th { font-family: 'Space Mono', monospace; font-size: clamp(.42rem,.65vw,.5rem); letter-spacing: .5px; color: var(--muted); text-transform: uppercase; padding: 4px 8px; border-bottom: 1px solid var(--border); text-align: center; }
 .session-tbl td { font-family: 'Space Mono', monospace; font-size: clamp(.5rem,.8vw,.6rem); padding: 5px 8px; text-align: center; border-bottom: 1px solid rgba(15,42,28,.6); color: var(--white); }
 .session-tbl tr:last-child td { border-bottom: none; }
-.session-tbl tr:hover td { background: rgba(0,232,150,.04); }
+.session-tbl tr:hover td { background: rgba(60,207,145,.04); }
 .session-tbl td.sess-pos { color: var(--muted); }
-.session-tbl td.sess-ini { font-family: 'Bebas Neue', sans-serif; font-size: clamp(.65rem,1.2vw,.9rem); letter-spacing: 2px; color: var(--white); }
+.session-tbl td.sess-ini { font-family: 'Bebas Neue', sans-serif; font-size: clamp(.65rem,1.2vw,.9rem); letter-spacing: .5px; color: var(--white); }
 .session-tbl td.sess-track { color: var(--muted); font-size: clamp(.4rem,.62vw,.48rem); }
 .session-tbl td.sess-actual { color: var(--bright); }
 .session-tbl td.sess-delta-good { color: var(--bright); }
@@ -731,7 +728,7 @@ body::before {
 .session-tbl td.sess-delta-bad { color: #ff6b6b; }
 .session-tbl td.sess-pts { color: var(--brand); font-family: 'Bebas Neue', sans-serif; font-size: clamp(.6rem,1.1vw,.82rem); letter-spacing: 1px; }
 .sess-new { animation: sess-flash .8s ease; }
-@keyframes sess-flash { 0%,100%{background:transparent} 40%{background:rgba(0,232,150,.12)} }
+@keyframes sess-flash { 0%,100%{background:transparent} 40%{background:rgba(60,207,145,.12)} }
 
 /* ── HIDE NUMBER INPUT SPINNERS ── */
 input[type=number]::-webkit-outer-spin-button,
@@ -764,7 +761,7 @@ input[type=number] { -moz-appearance: textfield; }
     START SESSION
   </button>
   <div style="font-family:'Space Mono',monospace;font-size:clamp(.3rem,.65vw,.44rem);
-    letter-spacing:3px;color:var(--border);text-align:center;margin-top:8px;">
+    letter-spacing: 1px;color:var(--border);text-align:center;margin-top:8px;">
     ENDEAVOUR RACING · 2026
   </div>
 </div>
